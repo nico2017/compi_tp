@@ -5,7 +5,9 @@ import java_cup.runtime.*;
 class Parser;
 
 
+
 // Terminals
+terminal COMENTARIOS;
 terminal ASSIG;
 terminal PLUS;
 terminal SUB;
@@ -13,20 +15,103 @@ terminal MULT;
 terminal DIV;
 terminal OPEN_BRACKET;
 terminal CLOSE_BRACKET;
+terminal KEYOPEN;
+terminal KEYCLOSE;
+terminal CORCHOPEN;
+terminal CORCHCLOSE;
+terminal IF;
+terminal WHILE;
+terminal ELSE;
+terminal PTO;
+terminal WRITES;
+terminal READ;
+terminal AND;
+terminal NOT;
+terminal OR;
+terminal DECSTR;
+terminal DECINT;
+terminal DECFLOAT;
+terminal VOID;
+terminal DOSPUNTOS;
+terminal PTOCOMA;
+terminal INIT;
+terminal COMA;
+terminal CMP_DIST;
+terminal CMP_IGUAL;
+terminal CMP_MA	;
+terminal CMP_MA_IGUAL ;
+terminal CMP_ME	;
+terminal CMP_ME_IGUAL ;
+terminal FLOATCONSTANT ;
+terminal STRCONSTANT ;
 terminal INTEGER_CONSTANT;
 terminal IDENTIFIER;
-
 // Non Terminals
 non terminal sentence;
 non terminal assignment;
 non terminal expression;
 non terminal term;
 non terminal factor;
-
+non terminal programa;
+non terminal bloque;
+non terminal declaracion;
+non terminal iteracion;
+non terminal seleccion;
+non terminal escribiendo;
+non terminal leyendo;
+non terminal wr_data;
+non terminal condicion;
+non terminal comparacion;
+non terminal comparador;
+non terminal comment;
 // Start Symbol Definition
-start with sentence;
+start with programa;
 
-sentence ::= assignment {: System.out.println("End"); :};
+programa ::= bloque{: System.out.println("BLOQUE ES PROGRAMA = End"); :};
+
+bloque ::= bloque sentence {: System.out.println("BLOQUE + SETENCIA ES BLOQUE"); :}
+           |sentence {: System.out.println("SEnTENCIA ES BLOQUE"); :};
+sentence ::= declaracion{: System.out.println("DECLARACIoN ES SENTENCIA"); :}
+               |iteracion{: System.out.println("ITERACION ES SENTENCIA"); :}
+               |seleccion{: System.out.println("SELECCION ES SENTENCIA"); :}
+               |escribiendo{: System.out.println("WRITE ES SENTENCIA"); :}
+               |leyendo {: System.out.println("READ ES SENTENCIA"); :}
+               |assignment {: System.out.println("ASIGNACIoN ES SENTENCIA"); :}
+               |comment {: System.out.println("COMENTARIOS ES SENTENCIA"); :};
+comment::= COMENTARIOS;
+escribiendo ::= WRITES OPEN_BRACKET wr_data CLOSE_BRACKET {: System.out.println("WRITE (dato)"); :};
+wr_data ::= IDENTIFIER | STRCONSTANT;
+leyendo::= READ OPEN_BRACKET IDENTIFIER CLOSE_BRACKET {: System.out.println("READ (dato)"); :};
+
+iteracion::=
+	WHILE  OPEN_BRACKET condicion CLOSE_BRACKET KEYOPEN
+	bloque
+	KEYCLOSE
+	;
+seleccion::=
+             	IF OPEN_BRACKET condicion CLOSE_BRACKET KEYOPEN
+             	bloque
+             	KEYCLOSE ELSE KEYOPEN bloque KEYCLOSE
+             	|IF  OPEN_BRACKET condicion CLOSE_BRACKET KEYOPEN bloque KEYCLOSE
+             	|IF  OPEN_BRACKET condicion CLOSE_BRACKET sentence
+             	;
+
+condicion::=
+	 comparacion AND comparacion
+	|comparacion OR comparacion  {: System.out.println("OR es condicion"); :}
+	|comparacion
+	|NOT OPEN_BRACKET comparacion CLOSE_BRACKET;
+comparacion::= expression comparador expression;
+comparador::=
+	CMP_MA_IGUAL
+	|CMP_ME_IGUAL
+	|CMP_ME
+	|CMP_MA {: System.out.println("Mayor es comparador"); :}
+	|CMP_IGUAL
+	|CMP_DIST;
+
+assignment::= IDENTIFIER ASSIG STRCONSTANT;
+
 assignment ::= IDENTIFIER ASSIG expression {: System.out.println("Assignment"); :};
 expression ::= expression PLUS term {: System.out.println("+"); :};
 expression ::= expression SUB term {: System.out.println("-"); :};
@@ -36,4 +121,5 @@ term ::= term DIV factor {: System.out.println("/"); :};
 term ::= factor {: System.out.println("Term = factor"); :};
 factor ::= IDENTIFIER:id  {: System.out.println("Id: " + id); :};
 factor ::= INTEGER_CONSTANT:constant {: System.out.println("Constant: " + constant ); :};
+factor ::= FLOATCONSTANT:constant {: System.out.println("Constant: " + constant ); :};
 factor ::= OPEN_BRACKET expression CLOSE_BRACKET {: System.out.println("Factor = (Expression)"); :};

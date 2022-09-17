@@ -81,6 +81,13 @@ public class LexerTest {
   }
 
   @Test
+  public void writeSTRConstant() throws Exception {
+    scan(".2");
+    assertThat(nextToken()).isEqualTo(ParserSym.FLOATCONSTANT);
+    assertThat(nextToken()).isEqualTo(ParserSym.EOF);
+  }
+
+  @Test
   public void unknownCharacter() {
     assertThrows(UnknownCharacterException.class, () -> {
       scan("#");

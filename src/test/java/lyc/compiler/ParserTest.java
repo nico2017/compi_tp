@@ -66,6 +66,10 @@ public class ParserTest {
         compilationSuccessful(readFromFile("not.txt"));
     }
 
+    private void compilationSuccessful(String input) throws Exception {
+        assertThat(scan(input).sym).isEqualTo(ParserSym.EOF);
+    }
+
     @Test
     void ifStatement() throws Exception {
         compilationSuccessful(readFromFile("if.txt"));
@@ -76,10 +80,6 @@ public class ParserTest {
         compilationSuccessful(readFromFile("while.txt"));
     }
 
-
-    private void compilationSuccessful(String input) throws Exception {
-        assertThat(scan(input).sym).isEqualTo(ParserSym.EOF);
-    }
 
     private void compilationError(String input){
         assertThrows(Exception.class, () -> scan(input));
