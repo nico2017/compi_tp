@@ -18,7 +18,7 @@ public class ParserTest {
 
     @Test
     public void assignmentWithExpression() throws Exception {
-        compilationSuccessful("c=d*(e-21)/4");
+        compilationSuccessful(readFromFile("assigWithExp.txt"));
     }
 
     @Test
@@ -29,6 +29,16 @@ public class ParserTest {
     @Test
     void assignments() throws Exception {
         compilationSuccessful(readFromFile("assignments.txt"));
+    }
+
+    @Test
+    void doCase() throws Exception {
+        compilationSuccessful(readFromFile("doCase.txt"));
+    }
+
+    @Test
+    void repeatInline() throws Exception {
+        compilationSuccessful(readFromFile("repeatInline.txt"));
     }
 
     @Test

@@ -48,7 +48,12 @@ DecStr = "String"
 DecInt = "Int"
 DecFloat = "Float"
 Void = void
-Init = "Init"
+Init = "Init"|"init"
+Repeat = "REPEAT"
+Do = "DO"
+Case = "CASE"
+Enddo = "ENDDO"
+Default="DEFAULT ##"
 
 FloatConstant = "-"?{Digit}*{Pto}{Digit}+|{Digit}+{Pto}{Digit}*
 Plus = "+"
@@ -59,7 +64,6 @@ Assig = "="|":="
 OpenBracket = "("
 CloseBracket = ")"
 Letter = [a-zA-Z]
-
 Digit = [0-9]
 KeyOpen = "{"
 KeyClose = "}"
@@ -74,7 +78,6 @@ CMP_MA	=	">"
 CMP_MA_IGUAL =	">="
 CMP_ME		= "<"
 CMP_ME_IGUAL =	"<="
-
 Pto = "."
 StrConstant = "\"".*."\""
 IntegerConstant = "-"?{Digit}+
@@ -103,6 +106,12 @@ Identifier = {Letter} ({Letter}|{Digit})*
   {KeyClose}                                    { return symbol(ParserSym.KEYCLOSE); }
   {CorchOpen}                                    { return symbol(ParserSym.CORCHOPEN); }
   {CorchClose}                                    { return symbol(ParserSym.CORCHCLOSE); }
+    {Repeat}                                    { return symbol(ParserSym.REPEAT, yytext()); }
+    {Do}                                    { return symbol(ParserSym.DO, yytext()); }
+    {Case}                                    { return symbol(ParserSym.CASE, yytext()); }
+    {Enddo}                                    { return symbol(ParserSym.ENDDO, yytext()); }
+    {Default}                                    { return symbol(ParserSym.DEFAULT, yytext()); }
+
   {If}                                    { return symbol(ParserSym.IF, yytext()); }
   {While}                                    { return symbol(ParserSym.WHILE, yytext()); }
   {Else}                                    { return symbol(ParserSym.ELSE, yytext()); }
@@ -118,6 +127,7 @@ Identifier = {Letter} ({Letter}|{Digit})*
   {Void}                                    { return symbol(ParserSym.VOID, yytext()); }
   {DosPuntos}                                    { return symbol(ParserSym.DOSPUNTOS); }
   {PtoComa}                                    { return symbol(ParserSym.PTOCOMA); }
+  {Coma}                                    { return symbol(ParserSym.COMA); }
   {Init}                                    { return symbol(ParserSym.INIT, yytext()); }
   {CMP_DIST}                                    { return symbol(ParserSym.CMP_DIST, yytext()); }
   {CMP_IGUAL}                                    { return symbol(ParserSym.CMP_IGUAL, yytext()); }

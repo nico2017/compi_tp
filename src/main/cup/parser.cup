@@ -19,6 +19,11 @@ terminal KEYOPEN;
 terminal KEYCLOSE;
 terminal CORCHOPEN;
 terminal CORCHCLOSE;
+terminal ENDDO ;
+terminal DO ;
+terminal CASE ;
+terminal DEFAULT;
+terminal REPEAT;
 terminal IF;
 terminal WHILE;
 terminal ELSE;
@@ -46,6 +51,8 @@ terminal FLOATCONSTANT ;
 terminal STRCONSTANT ;
 terminal INTEGER_CONSTANT;
 terminal IDENTIFIER;
+
+
 // Non Terminals
 non terminal sentence;
 non terminal assignment;
@@ -64,6 +71,11 @@ non terminal condicion;
 non terminal comparacion;
 non terminal comparador;
 non terminal comment;
+non terminal selCase;
+non terminal listCase;
+non terminal functionRepeatInline;
+non terminal listVar;
+non terminal variablesListadas;
 // Start Symbol Definition
 start with programa;
 
@@ -77,7 +89,27 @@ sentence ::= declaracion{: System.out.println("DECLARACIoN ES SENTENCIA"); :}
                |escribiendo{: System.out.println("WRITE ES SENTENCIA"); :}
                |leyendo {: System.out.println("READ ES SENTENCIA"); :}
                |assignment {: System.out.println("ASIGNACIoN ES SENTENCIA"); :}
-               |comment {: System.out.println("COMENTARIOS ES SENTENCIA"); :};
+               |comment {: System.out.println("COMENTARIOS ES SENTENCIA"); :}
+               |functionRepeatInline {: System.out.println("COMENTARIOS ES SENTENCIA"); :};
+
+declaracion::=
+    INIT KEYOPEN
+        listVar
+     KEYCLOSE;
+listVar::=
+        listVar  variablesListadas DOSPUNTOS DECFLOAT
+        |listVar variablesListadas DOSPUNTOS DECSTR
+        |listVar variablesListadas DOSPUNTOS DECINT
+        |variablesListadas DOSPUNTOS DECFLOAT
+        |variablesListadas DOSPUNTOS DECSTR
+        |variablesListadas DOSPUNTOS DECINT;
+
+variablesListadas::=
+        variablesListadas COMA IDENTIFIER
+        |IDENTIFIER;
+
+
+functionRepeatInline::= REPEAT INTEGER_CONSTANT CORCHOPEN bloque CORCHCLOSE;
 comment::= COMENTARIOS;
 escribiendo ::= WRITES OPEN_BRACKET wr_data CLOSE_BRACKET {: System.out.println("WRITE (dato)"); :};
 wr_data ::= IDENTIFIER | STRCONSTANT;
@@ -94,7 +126,19 @@ seleccion::=
              	KEYCLOSE ELSE KEYOPEN bloque KEYCLOSE
              	|IF  OPEN_BRACKET condicion CLOSE_BRACKET KEYOPEN bloque KEYCLOSE
              	|IF  OPEN_BRACKET condicion CLOSE_BRACKET sentence
-             	;
+             	|selCase;
+
+selCase::=DO IDENTIFIER
+             listCase
+             DEFAULT bloque
+        ENDDO
+        |DO IDENTIFIER
+              listCase
+        ENDDO
+        ;
+listCase::=
+        listCase CASE condicion bloque  {: System.out.println("ACA 3"); :}
+        |CASE condicion bloque {: System.out.println("ACA2"); :};
 
 condicion::=
 	 comparacion AND comparacion

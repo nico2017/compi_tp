@@ -1,0 +1,15 @@
+DO aA
+CASE aA>101
+    aA = 32
+CASE aA<101
+    aA = 32
+ENDDO
+
+DO aA
+CASE aA>101
+    aA = 32
+CASE aA<101
+    aA = 32
+DEFAULT ##
+    aA = 222
+ENDDO
