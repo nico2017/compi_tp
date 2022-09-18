@@ -76,6 +76,7 @@ non terminal listCase;
 non terminal functionRepeatInline;
 non terminal listVar;
 non terminal variablesListadas;
+non terminal decc;
 // Start Symbol Definition
 start with programa;
 
@@ -97,12 +98,9 @@ declaracion::=
         listVar
      KEYCLOSE;
 listVar::=
-        listVar  variablesListadas DOSPUNTOS DECFLOAT
-        |listVar variablesListadas DOSPUNTOS DECSTR
-        |listVar variablesListadas DOSPUNTOS DECINT
-        |variablesListadas DOSPUNTOS DECFLOAT
-        |variablesListadas DOSPUNTOS DECSTR
-        |variablesListadas DOSPUNTOS DECINT;
+        listVar  variablesListadas DOSPUNTOS decc
+        |variablesListadas DOSPUNTOS decc;
+decc::= DECFLOAT|DECSTR|DECINT;
 
 variablesListadas::=
         variablesListadas COMA IDENTIFIER
@@ -137,8 +135,8 @@ selCase::=DO IDENTIFIER
         ENDDO
         ;
 listCase::=
-        listCase CASE condicion bloque  {: System.out.println("ACA 3"); :}
-        |CASE condicion bloque {: System.out.println("ACA2"); :};
+        listCase CASE condicion bloque
+        |CASE condicion bloque ;
 
 condicion::=
 	 comparacion AND comparacion
