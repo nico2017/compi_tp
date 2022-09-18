@@ -2,9 +2,9 @@ package lyc.compiler;
 
 import java_cup.runtime.Symbol;
 import lyc.compiler.ParserSym;
-import lyc.compiler.model.*;
+import lyc.compiler.files.SymbolTableGenerator;import lyc.compiler.model.*;
 import static lyc.compiler.constants.Constants.*;
-
+import lyc.compiler.files.FileOutputWriter;
 %%
 
 %public
@@ -15,11 +15,34 @@ import static lyc.compiler.constants.Constants.*;
 %column
 //%throws CompilerException
 %eofval{
-  return symbol(ParserSym.EOF);
+    String tableCSV = "";
+        if(!cteInt.equals("")){
+            tableCSV+=cteInt;
+        }
+        if(!cteStr.equals("")){
+            tableCSV+=cteStr;
+        }
+        if(!cteFloat.equals("")){
+            tableCSV+=cteFloat;
+        }
+        if(!identif.equals("")){
+            tableCSV+=identif;
+        }
+
+        SymbolTableGenerator s = new SymbolTableGenerator();
+        s.setTableSymbol(tableCSV);
+        FileOutputWriter.writeOutput("symbol-table1.txt",s);
+
+        System.out.println(tableCSV);
+      return symbol(ParserSym.EOF);
 %eofval}
 
 
 %{
+  String cteInt = "";
+  String cteStr = "";
+  String cteFloat = "";
+  String identif = "";
   private Symbol symbol(int type) {
     return new Symbol(type, yyline, yycolumn);
   }
@@ -55,7 +78,7 @@ Case = "CASE"
 Enddo = "ENDDO"
 Default="DEFAULT ##"
 
-FloatConstant = "-"?{Digit}*{Pto}{Digit}+|{Digit}+{Pto}{Digit}*
+FloatConstant = {Digit}*{Pto}{Digit}+|{Digit}+{Pto}{Digit}*
 Plus = "+"
 Mult = "*"
 Sub = "-"
@@ -80,7 +103,7 @@ CMP_ME		= "<"
 CMP_ME_IGUAL =	"<="
 Pto = "."
 StrConstant = "\"".*."\""
-IntegerConstant = "-"?{Digit}+
+IntegerConstant = {Digit}+
 WhiteSpace = {LineTerminator} | {Identation}
 Identifier = {Letter} ({Letter}|{Digit})*
 
@@ -93,15 +116,14 @@ Identifier = {Letter} ({Letter}|{Digit})*
 <YYINITIAL> {
   /* operators */
 
-  {Plus}                                    { return symbol(ParserSym.PLUS); }
-  {Sub}                                     { return symbol(ParserSym.SUB); }
-  {Mult}                                    { return symbol(ParserSym.MULT); }
-  {Div}                                    { return symbol(ParserSym.DIV); }
+  {Plus}                                      { return symbol(ParserSym.PLUS); }
+  {Sub}                                       { return symbol(ParserSym.SUB); }
+  {Mult}                                      { return symbol(ParserSym.MULT); }
+  {Div}                                          { return symbol(ParserSym.DIV); }
   {Assig}                                   { return symbol(ParserSym.ASSIG); }
   {OpenBracket}                             { return symbol(ParserSym.OPEN_BRACKET); }
   {CloseBracket}                            { return symbol(ParserSym.CLOSE_BRACKET); }
-  {Div}                                    { return symbol(ParserSym.DIV); }
-  {FloatConstant}                                    { return symbol(ParserSym.FLOATCONSTANT, yytext()); }
+  {FloatConstant}                           {cteFloat+="_"+yytext()+";Float;"+yytext()+";"+yylength()+"\n"; return symbol(ParserSym.FLOATCONSTANT, yytext()); }
   {KeyOpen}                                    { return symbol(ParserSym.KEYOPEN); }
   {KeyClose}                                    { return symbol(ParserSym.KEYCLOSE); }
   {CorchOpen}                                    { return symbol(ParserSym.CORCHOPEN); }
@@ -136,11 +158,11 @@ Identifier = {Letter} ({Letter}|{Digit})*
   {CMP_ME}                                    { return symbol(ParserSym.CMP_ME, yytext()); }
   {CMP_ME_IGUAL}                                    { return symbol(ParserSym.CMP_ME_IGUAL, yytext()); }
 
-  {StrConstant}                                    { return symbol(ParserSym.STRCONSTANT, yytext()); }
+  {StrConstant}                                    {cteStr+="str_"+((new String(yytext())).replace(" ","_")).replace("\"","")+";String;"+yytext()+";"+yylength()+"\n"; return symbol(ParserSym.STRCONSTANT, yytext()); }
   /* identifiers */
-  {Identifier}                             { return symbol(ParserSym.IDENTIFIER, yytext()); }
+  {Identifier}                             {identif+="_"+yytext()+";;"+yylength()+"\n"; return symbol(ParserSym.IDENTIFIER, yytext()); }
   /* Constants */
-  {IntegerConstant}                        { return symbol(ParserSym.INTEGER_CONSTANT, yytext()); }
+  {IntegerConstant}                        {cteInt+="_"+yytext()+";Int;"+yytext()+";"+yylength()+"\n"; return symbol(ParserSym.INTEGER_CONSTANT, yytext()); }
   {Comentarios}                  { return symbol(ParserSym.COMENTARIOS, yytext());}
   /* whitespace */
   {WhiteSpace}                   { /* ignore */ }

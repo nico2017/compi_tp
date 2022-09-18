@@ -82,8 +82,8 @@ public class LexerTest {
 
   @Test
   public void writeSTRConstant() throws Exception {
-    scan(",");
-    assertThat(nextToken()).isEqualTo(ParserSym.COMA);
+    scan("-");
+    assertThat(nextToken()).isEqualTo(ParserSym.SUB);
     assertThat(nextToken()).isEqualTo(ParserSym.EOF);
   }
 
