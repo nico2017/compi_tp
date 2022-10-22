@@ -1,10 +1,44 @@
 package lyc.compiler;
 
 import java_cup.runtime.*;
+import java.util.LinkedList;
 
 class Parser;
 
+parser code{:
+    LinkedList<Integer> pilaExp         = new LinkedList<Integer>();
 
+    int expIfAux = 0,auxTercRepeat_init=0,auxTercRepeat_fin=0;
+    String operaIf = "";
+    LinkedList<Integer> pilaIfSaltos    = new LinkedList<Integer>();
+    LinkedList<Integer> pilaWhileSaltos    = new LinkedList<Integer>();
+    LinkedList<Integer> pilaWhileSaltos2    = new LinkedList<Integer>();
+    LinkedList<Integer> pilaCaseSaltos    = new LinkedList<Integer>();
+
+    public class Terceto {
+        public static int sentence,condicionWhile,assignment,expression,term,factor,programa,bloque,declaracion,iteracion,seleccion,escribiendo,leyendo,wr_data
+                ,condicion,comparacion,comparador,comment,selCase,listCase,functionRepeatInline,listVar,decc,variablesListadas;
+
+        private static int  contador;
+        public static String  terc = "";
+        public static int crearTerceto(String i,String ii,String iii){
+            contador++;
+            terc+="["+contador+"] ";
+            terc+= "("+i+","+ii+","+iii+")\n";
+            return contador;
+        }
+
+
+        public static void guardarTercetos(){
+            sentence=assignment=expression=term=factor=programa=bloque=declaracion=iteracion=seleccion=escribiendo=leyendo=wr_data
+                    =condicion=comparacion=condicionWhile=comparador=comment=selCase=listCase=functionRepeatInline=listVar=
+                    decc=variablesListadas = 0;
+            contador = 0;
+            System.out.println(terc);
+            terc = "";
+        }
+    }
+ :}
 
 // Terminals
 terminal COMENTARIOS;
@@ -77,19 +111,20 @@ non terminal functionRepeatInline;
 non terminal listVar;
 non terminal variablesListadas;
 non terminal decc;
+non terminal condicionWhile;
 // Start Symbol Definition
 start with programa;
 
-programa ::= bloque{: System.out.println("BLOQUE ES PROGRAMA = End"); :};
+programa ::= bloque{: System.out.println("BLOQUE ES PROGRAMA = End"); Terceto.programa = Terceto.bloque; Terceto.guardarTercetos(); :};
 
 bloque ::= bloque sentence {: System.out.println("BLOQUE + SETENCIA ES BLOQUE"); :}
-           |sentence {: System.out.println("SEnTENCIA ES BLOQUE"); :};
+           |sentence {: System.out.println("SEnTENCIA ES BLOQUE");Terceto.bloque = Terceto.sentence; :};
 sentence ::= declaracion{: System.out.println("DECLARACIoN ES SENTENCIA"); :}
                |iteracion{: System.out.println("ITERACION ES SENTENCIA"); :}
                |seleccion{: System.out.println("SELECCION ES SENTENCIA"); :}
                |escribiendo{: System.out.println("WRITE ES SENTENCIA"); :}
                |leyendo {: System.out.println("READ ES SENTENCIA"); :}
-               |assignment {: System.out.println("ASIGNACIoN ES SENTENCIA"); :}
+               |assignment {: System.out.println("ASIGNACIoN ES SENTENCIA");Terceto.sentence=Terceto.assignment; :}
                |comment {: System.out.println("COMENTARIOS ES SENTENCIA"); :}
                |functionRepeatInline {: System.out.println("COMENTARIOS ES SENTENCIA"); :};
 
@@ -107,60 +142,103 @@ variablesListadas::=
         |IDENTIFIER;
 
 
-functionRepeatInline::= REPEAT INTEGER_CONSTANT CORCHOPEN bloque CORCHCLOSE;
+functionRepeatInline::= REPEAT INTEGER_CONSTANT:constant
+                                {:  auxTercRepeat_init = Terceto.contador+1;
+                                    Terceto.crearTerceto("ETIQ_REPEAT_INIT"+auxTercRepeat_init,"_","_");
+                                    Terceto.crearTerceto(""+constant,"_","_");
+                                    Terceto.crearTerceto("0","_","_");
+                                    Terceto.crearTerceto("CMP","_","_");
+                                    Terceto.crearTerceto("BGT","_ETIQ_"+(Terceto.contador+1),"_");
+                                    auxTercRepeat_fin = Terceto.contador;:}
+                                    CORCHOPEN bloque CORCHCLOSE
+                                {:  Terceto.crearTerceto("BRA","ETIQ_REPEAT_INIT"+auxTercRepeat_init,"_");
+                                    Terceto.crearTerceto("_ETIQ_"+auxTercRepeat_fin,"_","_");:};
 comment::= COMENTARIOS;
-escribiendo ::= WRITES OPEN_BRACKET wr_data CLOSE_BRACKET {: System.out.println("WRITE (dato)"); :};
-wr_data ::= IDENTIFIER | STRCONSTANT;
-leyendo::= READ OPEN_BRACKET IDENTIFIER CLOSE_BRACKET {: System.out.println("READ (dato)"); :};
+escribiendo ::= WRITES OPEN_BRACKET wr_data CLOSE_BRACKET ;
+wr_data ::= IDENTIFIER:id {: Terceto.crearTerceto("WRITE",""+id,"_"); :}| STRCONSTANT:constant{: Terceto.crearTerceto("WRITE",""+constant,"_"); :};
+leyendo::= READ OPEN_BRACKET IDENTIFIER:id {: Terceto.crearTerceto("READ",""+id,"_"); :} CLOSE_BRACKET ;
 
 iteracion::=
-	WHILE  OPEN_BRACKET condicion CLOSE_BRACKET KEYOPEN
+	WHILE  OPEN_BRACKET
+	    {:  Terceto.crearTerceto("ETIQ_INIT_WHILE"+(Terceto.contador+1),"_","_");
+	        pilaWhileSaltos2.add(Terceto.contador);:} condicionWhile CLOSE_BRACKET KEYOPEN
 	bloque
-	KEYCLOSE
-	;
-seleccion::=
-             	IF OPEN_BRACKET condicion CLOSE_BRACKET KEYOPEN
-             	bloque
-             	KEYCLOSE ELSE KEYOPEN bloque KEYCLOSE
-             	|IF  OPEN_BRACKET condicion CLOSE_BRACKET KEYOPEN bloque KEYCLOSE
-             	|IF  OPEN_BRACKET condicion CLOSE_BRACKET sentence
-             	|selCase;
+	    {:  int whileSaltoAux = pilaWhileSaltos2.removeLast();
+	        Terceto.crearTerceto("BRANCH","ETIQ_INIT_WHILE"+whileSaltoAux,"");
+	        whileSaltoAux = pilaWhileSaltos.removeLast();
+	        Terceto.crearTerceto("_ETIQ_"+whileSaltoAux,"_","_"); :}
+	KEYCLOSE;
 
-selCase::=DO IDENTIFIER
-             listCase
+condicionWhile::=
+     comparacion AND comparacion
+    |comparacion OR comparacion  {: System.out.println("OR es condicion"); :}
+    |comparacion {: Terceto.crearTerceto("CMP","_","_");
+                    Terceto.condicionWhile=Terceto.crearTerceto(""+operaIf,"_ETIQ_"+(Terceto.contador+1),"_");
+                    pilaWhileSaltos.add(Terceto.condicionWhile);:}
+    |NOT OPEN_BRACKET comparacion CLOSE_BRACKET;
+
+seleccion::=
+             	IF OPEN_BRACKET condicion  CLOSE_BRACKET KEYOPEN bloque
+              KEYCLOSE  {: int ifSaltoAux = pilaIfSaltos.removeLast();
+                            Terceto.crearTerceto("BRANCH","_ETIQ_"+(Terceto.contador+1),"");
+                            pilaIfSaltos.add(Terceto.contador);
+                            Terceto.crearTerceto("_ETIQ_"+ifSaltoAux,"_","_"); :}
+                            ELSE KEYOPEN bloque KEYCLOSE
+                        {: int ifSaltoAux = pilaIfSaltos.removeLast();
+                            Terceto.crearTerceto("_ETIQ_"+ifSaltoAux,"_","_"); :}
+             	|IF  OPEN_BRACKET condicion  CLOSE_BRACKET  KEYOPEN bloque KEYCLOSE
+                        {:  int ifSaltoAux = pilaIfSaltos.removeLast();
+                            Terceto.crearTerceto("_ETIQ_"+ifSaltoAux,"_","_"); :}
+             	|IF  OPEN_BRACKET condicion CLOSE_BRACKET sentence
+                        {:  int ifSaltoAux = pilaIfSaltos.removeLast();
+                            Terceto.crearTerceto("_ETIQ_"+ifSaltoAux,"_","_"); :}
+             	|{:pilaCaseSaltos.add(Terceto.contador+1);:} selCase {:int casePila = pilaCaseSaltos.removeLast();Terceto.crearTerceto("ETIQ_CASE_FIN"+casePila,"_","_");:};
+
+selCase::= DO  IDENTIFIER
+              listCase
              DEFAULT bloque
-        ENDDO
-        |DO IDENTIFIER
+        ENDDO;
+selCase::=DO IDENTIFIER
               listCase
         ENDDO
         ;
 listCase::=
         listCase CASE condicion bloque
-        |CASE condicion bloque ;
-
+            {:  int saltoCase = pilaCaseSaltos.removeLast();
+                Terceto.crearTerceto("BRA","ETIQ_CASE_FIN"+saltoCase,"_");
+                pilaCaseSaltos.add(saltoCase);
+                int ifSaltoAux = pilaIfSaltos.removeLast();
+                Terceto.crearTerceto("_ETIQ_"+ifSaltoAux,"_","_"); :};
+listCase::=CASE condicion bloque
+            {:
+                int saltoCase = pilaCaseSaltos.removeLast();
+                Terceto.crearTerceto("BRA","ETIQ_CASE_FIN"+saltoCase,"_");
+                pilaCaseSaltos.add(saltoCase);
+                int ifSaltoAux = pilaIfSaltos.removeLast();
+                Terceto.crearTerceto("_ETIQ_"+ifSaltoAux,"_","_"); :};
 condicion::=
 	 comparacion AND comparacion
-	|comparacion OR comparacion  {: System.out.println("OR es condicion"); :}
-	|comparacion
+	|comparacion OR  comparacion  {: System.out.println("OR es condicion"); :}
+	|comparacion {:Terceto.crearTerceto("CMP","_","_");Terceto.condicion=Terceto.crearTerceto(""+operaIf,"_ETIQ_"+(Terceto.contador+1),"_"); pilaIfSaltos.add(Terceto.condicion);:}
 	|NOT OPEN_BRACKET comparacion CLOSE_BRACKET;
-comparacion::= expression comparador expression;
+comparacion::= expression comparador expression ;
 comparador::=
-	CMP_MA_IGUAL
-	|CMP_ME_IGUAL
-	|CMP_ME
-	|CMP_MA {: System.out.println("Mayor es comparador"); :}
-	|CMP_IGUAL
-	|CMP_DIST;
+	CMP_MA_IGUAL    {:operaIf = "BLT";:}
+	|CMP_ME_IGUAL   {:operaIf = "BGT";:}
+	|CMP_ME         {:operaIf = "BGE";:}
+	|CMP_MA         {:operaIf = "BLE";:}
+	|CMP_IGUAL      {:operaIf = "BNE";:}
+	|CMP_DIST       {:operaIf = "BEQ";:};
 
-assignment::= IDENTIFIER ASSIG STRCONSTANT;
-assignment ::= IDENTIFIER ASSIG expression {: System.out.println("Assignment"); :};
-expression ::= expression PLUS term {: System.out.println("+"); :};
-expression ::= expression SUB term {: System.out.println("-"); :};
-expression ::= term {: System.out.println("Expression = Term"); :};
-term ::= term MULT factor {: System.out.println("*"); :};
-term ::= term DIV factor {: System.out.println("/"); :};
-term ::= factor {: System.out.println("Term = factor"); :};
-factor ::= IDENTIFIER:id  {: System.out.println("Id: " + id); :};
-factor ::= INTEGER_CONSTANT:constant {: System.out.println("Constant: " + constant ); :};
-factor ::= FLOATCONSTANT:constant {: System.out.println("Constant: " + constant ); :};
-factor ::= OPEN_BRACKET  expression CLOSE_BRACKET {: System.out.println("Factor = (Expression)"); :};
+assignment::= IDENTIFIER:id ASSIG STRCONSTANT:constant{:Terceto.crearTerceto("=",""+id,""+constant);:};
+assignment ::= IDENTIFIER:id ASSIG expression {: Terceto.assignment=Terceto.crearTerceto("=",""+id,"TERC"+Terceto.expression);  :};
+expression ::= expression PLUS term {:Terceto.expression=Terceto.crearTerceto("+","TERC"+Terceto.expression,"TERC"+Terceto.term);System.out.print(",2");:};
+expression ::= expression SUB term {:Terceto.expression=Terceto.crearTerceto("-","TERC"+Terceto.expression,"TERC"+Terceto.term); System.out.print(",3");:};
+expression ::= term {:Terceto.expression= Terceto.term;System.out.println("ACA1"); System.out.print(",4"); :};
+term ::= term MULT factor {:Terceto.term=Terceto.crearTerceto("*","TERC"+Terceto.term,"TERC"+Terceto.factor); System.out.print(",5"); :};
+term ::= term DIV factor {:Terceto.term=Terceto.crearTerceto("/","TERC"+Terceto.term,"TERC"+Terceto.factor); System.out.print(",6"); :};
+term ::= factor {:Terceto.term = Terceto.factor; System.out.print(",7"); :};
+factor ::= IDENTIFIER:id  {: Terceto.factor=Terceto.crearTerceto(""+id,"_","_");System.out.print(",8"); :};
+factor ::= INTEGER_CONSTANT:constant {:Terceto.factor=Terceto.crearTerceto(""+constant,"_","_"); System.out.print(",9"); :};
+factor ::= FLOATCONSTANT:constant {:Terceto.factor=Terceto.crearTerceto(""+constant,"_","_"); System.out.print(",10" ); :};
+factor ::= {:pilaExp.add(Terceto.expression);:}OPEN_BRACKET expression CLOSE_BRACKET {:Terceto.factor = Terceto.expression;Terceto.expression = pilaExp.removeLast(); System.out.print(",11"); :};

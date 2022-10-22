@@ -16,25 +16,17 @@ import lyc.compiler.files.FileOutputWriter;
 //%throws CompilerException
 %eofval{
     String tableCSV = "";
-        if(!cteInt.equals("")){
-            tableCSV+=cteInt;
-        }
-        if(!cteStr.equals("")){
-            tableCSV+=cteStr;
-        }
-        if(!cteFloat.equals("")){
-            tableCSV+=cteFloat;
-        }
-        if(!identif.equals("")){
-            tableCSV+=identif;
-        }
+    tableCSV+=cteInt;
+    tableCSV+=cteStr;
+    tableCSV+=cteFloat;
+    tableCSV+=identif;
 
-        SymbolTableGenerator s = new SymbolTableGenerator();
-        s.setTableSymbol(tableCSV);
-        FileOutputWriter.writeOutput("symbol-table1.txt",s);
+    SymbolTableGenerator s = new SymbolTableGenerator();
+    s.setTableSymbol(tableCSV);
+    FileOutputWriter.writeOutput("symbol-table1.txt",s);
 
-        System.out.println(tableCSV);
-      return symbol(ParserSym.EOF);
+    //System.out.println(tableCSV);
+    return symbol(ParserSym.EOF);
 %eofval}
 
 
@@ -76,7 +68,7 @@ Repeat = "REPEAT"
 Do = "DO"
 Case = "CASE"
 Enddo = "ENDDO"
-Default="DEFAULT ##"
+Default="DEFAULT"
 
 FloatConstant = {Digit}*{Pto}{Digit}+|{Digit}+{Pto}{Digit}*
 Plus = "+"

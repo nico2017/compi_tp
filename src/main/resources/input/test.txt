@@ -1,10 +1,13 @@
-c=d*(e-21)/4
 
-if (a > b)
-{
-    write("a es mas grande que b")
-}
-else
-{
-    write("a es mas chico o igual a b")
-}
+DO A
+CASE aA>101
+    aA = 32
+CASE aA<101
+    aA = 32
+DEFAULT
+    aA = 31 - 2
+ENDDO
+a = "asd"
+
+
+
