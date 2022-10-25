@@ -6,10 +6,11 @@ import java.util.LinkedList;
 class Parser;
 
 parser code{:
-    LinkedList<Integer> pilaExp         = new LinkedList<Integer>();
 
-    int expIfAux = 0,auxTercRepeat_init=0,auxTercRepeat_fin=0;
+
+    int auxTercRepeat_init=0,auxTercRepeat_fin=0;
     String operaIf = "";
+    LinkedList<Integer> pilaExp         = new LinkedList<Integer>();
     LinkedList<Integer> pilaIfSaltos    = new LinkedList<Integer>();
     LinkedList<Integer> pilaWhileSaltos    = new LinkedList<Integer>();
     LinkedList<Integer> pilaWhileSaltos2    = new LinkedList<Integer>();
@@ -21,6 +22,7 @@ parser code{:
 
         private static int  contador;
         public static String  terc = "";
+
         public static int crearTerceto(String i,String ii,String iii){
             contador++;
             terc+="["+contador+"] ";
@@ -115,16 +117,16 @@ non terminal condicionWhile;
 // Start Symbol Definition
 start with programa;
 
-programa ::= bloque{: System.out.println("BLOQUE ES PROGRAMA = End"); Terceto.programa = Terceto.bloque; Terceto.guardarTercetos(); :};
+programa ::= bloque{: System.out.println("BLOQUE ES PROGRAMA = End");  Terceto.guardarTercetos();  :};
 
 bloque ::= bloque sentence {: System.out.println("BLOQUE + SETENCIA ES BLOQUE"); :}
-           |sentence {: System.out.println("SEnTENCIA ES BLOQUE");Terceto.bloque = Terceto.sentence; :};
+           |sentence {: System.out.println("SEnTENCIA ES BLOQUE"); :};
 sentence ::= declaracion{: System.out.println("DECLARACIoN ES SENTENCIA"); :}
                |iteracion{: System.out.println("ITERACION ES SENTENCIA"); :}
                |seleccion{: System.out.println("SELECCION ES SENTENCIA"); :}
                |escribiendo{: System.out.println("WRITE ES SENTENCIA"); :}
                |leyendo {: System.out.println("READ ES SENTENCIA"); :}
-               |assignment {: System.out.println("ASIGNACIoN ES SENTENCIA");Terceto.sentence=Terceto.assignment; :}
+               |assignment {: System.out.println("ASIGNACIoN ES SENTENCIA"); :}
                |comment {: System.out.println("COMENTARIOS ES SENTENCIA"); :}
                |functionRepeatInline {: System.out.println("COMENTARIOS ES SENTENCIA"); :};
 
@@ -146,12 +148,16 @@ functionRepeatInline::= REPEAT INTEGER_CONSTANT:constant
                                 {:  auxTercRepeat_init = Terceto.contador+1;
                                     Terceto.crearTerceto("ETIQ_REPEAT_INIT"+auxTercRepeat_init,"_","_");
                                     Terceto.crearTerceto(""+constant,"_","_");
-                                    Terceto.crearTerceto("0","_","_");
+                                    Terceto.crearTerceto("_INT_AUX_REPEAT"+auxTercRepeat_init,"_","_");
                                     Terceto.crearTerceto("CMP","_","_");
                                     Terceto.crearTerceto("BGT","_ETIQ_"+(Terceto.contador+1),"_");
                                     auxTercRepeat_fin = Terceto.contador;:}
                                     CORCHOPEN bloque CORCHCLOSE
-                                {:  Terceto.crearTerceto("BRA","ETIQ_REPEAT_INIT"+auxTercRepeat_init,"_");
+                                {:  Terceto.crearTerceto("_INT_AUX_REPEAT"+auxTercRepeat_init,"_","_");
+                                    Terceto.crearTerceto("1","_","_");
+                                    Terceto.crearTerceto("-","_INT_AUX_REPEAT"+auxTercRepeat_init,"["+Terceto.contador+"]");
+                                    Terceto.crearTerceto("=","_INT_AUX_REPEAT"+auxTercRepeat_init,"["+Terceto.contador+"]");
+                                    Terceto.crearTerceto("BRA","ETIQ_REPEAT_INIT"+auxTercRepeat_init,"_");
                                     Terceto.crearTerceto("_ETIQ_"+auxTercRepeat_fin,"_","_");:};
 comment::= COMENTARIOS;
 escribiendo ::= WRITES OPEN_BRACKET wr_data CLOSE_BRACKET ;
@@ -216,6 +222,7 @@ listCase::=CASE condicion bloque
                 pilaCaseSaltos.add(saltoCase);
                 int ifSaltoAux = pilaIfSaltos.removeLast();
                 Terceto.crearTerceto("_ETIQ_"+ifSaltoAux,"_","_"); :};
+
 condicion::=
 	 comparacion AND comparacion
 	|comparacion OR  comparacion  {: System.out.println("OR es condicion"); :}
