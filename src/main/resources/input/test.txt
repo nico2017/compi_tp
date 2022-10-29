@@ -1,8 +1,10 @@
-if ( d < 3 OR d > (33+3+e*1) ){
-    if( y < u OR g > s ){
-        y=1
-    }else{
-        t=1
-    }
-    u = 1
+c=d*(e-21)/4
+
+if (a > b)
+{
+    write("a es mas grande que b")
+}
+else
+{
+    write("a es mas chico o igual a b")
 }

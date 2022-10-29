@@ -13,9 +13,3 @@ CASE aA<101
 DEFAULT ##
     aA = 222
 ENDDO
-
-
-1. definicion de variable - ver de actualizar la tabla de simbolo
-2. comparacion AND-OR : hacer semantica
-3. hacer algoritmo de asm
-4. guardar en archivo los tercetos

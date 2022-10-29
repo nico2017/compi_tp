@@ -8,7 +8,7 @@ class Parser;
 parser code{:
 
 
-    int auxTercRepeat_init=0,auxTercRepeat_fin=0,auxTercOR=0;
+    int auxTercRepeat_init=0,auxTercRepeat_fin=0,auxTercOR=0, cont=0;
     String operaIf = "";
     LinkedList<Integer> pilaExp         = new LinkedList<Integer>();
     LinkedList<Integer> pilaIfSaltos    = new LinkedList<Integer>();
@@ -138,11 +138,14 @@ declaracion::=
 listVar::=
         listVar  variablesListadas DOSPUNTOS decc
         |variablesListadas DOSPUNTOS decc;
-decc::= DECFLOAT|DECSTR|DECINT;
+decc::= DECFLOAT  {: System.out.println("Real"); :};
+decc::= DECSTR  {: System.out.println("Cadena"); :};
+decc::= DECINT {: System.out.println("Entero"); :};
 
-variablesListadas::=
-        variablesListadas COMA IDENTIFIER
-        |IDENTIFIER;
+
+
+variablesListadas::=  variablesListadas COMA IDENTIFIER {: System.out.println("Variable"); cont++; :};
+variablesListadas::=  IDENTIFIER {: System.out.println("Variable"); cont=1; :};
 
 
 functionRepeatInline::= REPEAT INTEGER_CONSTANT:constant
@@ -177,11 +180,25 @@ iteracion::=
 	KEYCLOSE;
 
 condicionWhile::=
-     comparacion AND comparacion
-    |comparacion OR comparacion  {: System.out.println("OR es condicion"); :}
+
+	 comparacion {:Terceto.crearTerceto("CMP","_","_");Terceto.condicion=Terceto.crearTerceto(""+operaIf,"_ETIQ_"+(Terceto.contador+1),"_"); pilaIfSaltos.add(Terceto.condicion);:} AND comparacion {:Terceto.crearTerceto("CMP","_","_");System.out.println("aca!!!!");int x = pilaIfSaltos.removeLast();Terceto.condicion=Terceto.crearTerceto(""+operaIf,"_ETIQ_"+x,"_");pilaIfSaltos.add(x); :}
+	|comparacion {: Terceto.crearTerceto("CMP","_","_");
+                    String et = "_ETIQ_"+(Terceto.contador+1);
+	                 Terceto.condicionWhile=Terceto.crearTerceto(""+operaIf,et,"_");
+	                 Terceto.condicionWhile = Terceto.crearTerceto("BRA","_ETIQ_"+(Terceto.contador+1),"_");
+	                pilaIfSaltos.add(Terceto.condicionWhile);
+                    Terceto.crearTerceto(et,"_","_");
+	                :}OR  comparacion  {:
+	                    Terceto.crearTerceto("CMP","_","_");
+	                    int x = pilaIfSaltos.removeLast();
+                         Terceto.condicionWhile=Terceto.crearTerceto(""+operaIf,"_ETIQ_"+(Terceto.contador+1),"_");
+                        pilaIfSaltos.add(Terceto.condicionWhile);
+                        Terceto.crearTerceto("_ETIQ_"+x,"_","_");
+	                :}
     |comparacion {: Terceto.crearTerceto("CMP","_","_");
                     Terceto.condicionWhile=Terceto.crearTerceto(""+operaIf,"_ETIQ_"+(Terceto.contador+1),"_");
                     pilaWhileSaltos.add(Terceto.condicionWhile);:}
+
     |NOT OPEN_BRACKET comparacion CLOSE_BRACKET;
 
 

@@ -115,7 +115,6 @@ Identifier = {Letter} ({Letter}|{Digit})*
   {Assig}                                   { return symbol(ParserSym.ASSIG); }
   {OpenBracket}                             { return symbol(ParserSym.OPEN_BRACKET); }
   {CloseBracket}                            { return symbol(ParserSym.CLOSE_BRACKET); }
-  {FloatConstant}                           {cteFloat+="_"+yytext()+";Float;"+yytext()+";"+yylength()+"\n"; return symbol(ParserSym.FLOATCONSTANT, yytext()); }
   {KeyOpen}                                    { return symbol(ParserSym.KEYOPEN); }
   {KeyClose}                                    { return symbol(ParserSym.KEYCLOSE); }
   {CorchOpen}                                    { return symbol(ParserSym.CORCHOPEN); }
@@ -150,12 +149,14 @@ Identifier = {Letter} ({Letter}|{Digit})*
   {CMP_ME}                                    { return symbol(ParserSym.CMP_ME, yytext()); }
   {CMP_ME_IGUAL}                                    { return symbol(ParserSym.CMP_ME_IGUAL, yytext()); }
 
-  {StrConstant}                                    {cteStr+="str_"+((new String(yytext())).replace(" ","_")).replace("\"","")+";String;"+yytext()+";"+yylength()+"\n"; return symbol(ParserSym.STRCONSTANT, yytext()); }
+  {FloatConstant}               /* Valido rango de Real */          { float tope = 214748364 ; float numberf = Float.parseFloat(yytext()); if ( numberf > tope  || numberf < -tope ) {System.out.println("Numero fuera de rango: "); System.out.println(yytext()); break; }  return symbol(ParserSym.FLOATCONSTANT, yytext()); }
+
+  {StrConstant}                 /* Valido el largo de la Cadena */  { int stringLength = yytext().length(); if (stringLength > 30){System.out.println("Cadena muy larga: "); System.out.println(yytext()); break; };  return symbol(ParserSym.STRCONSTANT, yytext()); }
   /* identifiers */
-  {Identifier}                             {identif+="_"+yytext()+";;"+yylength()+"\n"; return symbol(ParserSym.IDENTIFIER, yytext()); }
+  {Identifier}                                                                  {  return symbol(ParserSym.IDENTIFIER, yytext()); }
   /* Constants */
-  {IntegerConstant}                        {cteInt+="_"+yytext()+";Int;"+yytext()+";"+yylength()+"\n"; return symbol(ParserSym.INTEGER_CONSTANT, yytext()); }
-  {Comentarios}                  { return symbol(ParserSym.COMENTARIOS, yytext());}
+  {IntegerConstant}            /* Valido rango del Entero */        { int number = Integer.parseInt(yytext());  if ( number > 32769 || number < -32767) {System.out.println("Numero fuera de rango: "); System.out.println(yytext()); break; } ; return symbol(ParserSym.INTEGER_CONSTANT, yytext()); }
+  {Comentarios}                             { return symbol(ParserSym.COMENTARIOS, yytext());}
   /* whitespace */
   {WhiteSpace}                   { /* ignore */ }
 
