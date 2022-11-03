@@ -15,26 +15,12 @@ import lyc.compiler.files.FileOutputWriter;
 %column
 //%throws CompilerException
 %eofval{
-    String tableCSV = "";
-    tableCSV+=cteInt;
-    tableCSV+=cteStr;
-    tableCSV+=cteFloat;
-    tableCSV+=identif;
-
-    SymbolTableGenerator s = new SymbolTableGenerator();
-    s.setTableSymbol(tableCSV);
-    FileOutputWriter.writeOutput("symbol-table1.txt",s);
-
-    //System.out.println(tableCSV);
     return symbol(ParserSym.EOF);
 %eofval}
 
 
 %{
-  String cteInt = "";
-  String cteStr = "";
-  String cteFloat = "";
-  String identif = "";
+
   private Symbol symbol(int type) {
     return new Symbol(type, yyline, yycolumn);
   }
