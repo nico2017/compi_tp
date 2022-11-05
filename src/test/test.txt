@@ -78,6 +78,11 @@ while (a > b AND c > b)
 
 while (a > b OR c > b)
 {
-    write("a mas grande que b")
-    a = a + 1
+    if( a == 1 OR a != 1){
+        if(NOT(a > 1)){
+            a = a + 1
+        }
+        a = 2
+    }
+
 }
