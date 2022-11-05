@@ -49,6 +49,11 @@ parser code{:
                     decc=variablesListadas = 0;
             contador = 0;
             System.out.println(terc);
+
+            SymbolTableGenerator s = new SymbolTableGenerator();
+            s.setTableSymbol(terc);
+            FileOutputWriter.writeOutput("tercetos-semantica.txt",s);
+
             terc = "";
         }
         public static String invertirComparador(String operador){
@@ -217,12 +222,14 @@ functionRepeatInline::= REPEAT INTEGER_CONSTANT:constant
                                     Terceto.crearTerceto("ETIQ_REPEAT_INIT"+auxTercRepeat_init,"_","_");
                                     Terceto.crearTerceto(""+constant,"_","_");
                                     Terceto.crearTerceto("_INT_AUX_REPEAT"+auxTercRepeat_init,"_","_");
+                                    Terceto.insertarElementoEnTS("_INT_AUX_REPEAT"+auxTercRepeat_init,"_INT_AUX_REPEAT"+auxTercRepeat_init,"Int",0);
                                     Terceto.crearTerceto("CMP","_","_");
                                     Terceto.crearTerceto("BGT","_ETIQ_"+(Terceto.contador+1),"_");
                                     auxTercRepeat_fin = Terceto.contador;:}
                                     CORCHOPEN bloque CORCHCLOSE
                                 {:  Terceto.crearTerceto("_INT_AUX_REPEAT"+auxTercRepeat_init,"_","_");
                                     Terceto.crearTerceto("1","_","_");
+                                    Terceto.insertarElementoEnTS("1","1","Int",0);
                                     Terceto.crearTerceto("-","_INT_AUX_REPEAT"+auxTercRepeat_init,"["+Terceto.contador+"]");
                                     Terceto.crearTerceto("=","_INT_AUX_REPEAT"+auxTercRepeat_init,"["+Terceto.contador+"]");
                                     Terceto.crearTerceto("BRA","["+auxTercRepeat_init+"]","_");
@@ -353,13 +360,13 @@ comparador::=
 	|CMP_DIST       {:operaIf = "BEQ";:};
 
 assignment::= IDENTIFIER:id ASSIG STRCONSTANT:constant{:Terceto.insertarElementoEnTS(""+constant,""+constant,"String",0);Terceto.crearTerceto("=",""+id,""+constant);:};
-assignment ::= IDENTIFIER:id ASSIG expression {: Terceto.assignment=Terceto.crearTerceto("=",""+id,"TERC"+Terceto.expression);  :};
-expression ::= expression PLUS term {:Terceto.expression=Terceto.crearTerceto("+","TERC"+Terceto.expression,"TERC"+Terceto.term);System.out.print(",2");:};
-expression ::= expression SUB term {:Terceto.expression=Terceto.crearTerceto("-","TERC"+Terceto.expression,"TERC"+Terceto.term); System.out.print(",3");:};
-expression ::= term {:Terceto.expression= Terceto.term;System.out.println("ACA1"); System.out.print(",4"); :};
-term ::= term MULT factor {:Terceto.term=Terceto.crearTerceto("*","TERC"+Terceto.term,"TERC"+Terceto.factor); System.out.print(",5"); :};
-term ::= term DIV factor {:Terceto.term=Terceto.crearTerceto("/","TERC"+Terceto.term,"TERC"+Terceto.factor); System.out.print(",6"); :};
-term ::= factor {:Terceto.term = Terceto.factor; System.out.print(",7"); :};
+assignment ::= IDENTIFIER:id ASSIG expression {: Terceto.assignment=Terceto.crearTerceto("=",""+id,"["+Terceto.expression+"]");  :};
+expression ::= expression PLUS term {:Terceto.expression=Terceto.crearTerceto("+","["+Terceto.expression+"]","["+Terceto.term+"]");:};
+expression ::= expression SUB term {:Terceto.expression=Terceto.crearTerceto("-","["+Terceto.expression+"]","["+Terceto.term+"]");:};
+expression ::= term {:Terceto.expression= Terceto.term; :};
+term ::= term MULT factor {:Terceto.term=Terceto.crearTerceto("*","["+Terceto.term+"]","["+Terceto.factor+"]"); :};
+term ::= term DIV factor {:Terceto.term=Terceto.crearTerceto("/","["+Terceto.term+"]","["+Terceto.factor+"]"); :};
+term ::= factor {:Terceto.term = Terceto.factor;  :};
 factor ::= IDENTIFIER:id  {: Terceto.factor=Terceto.crearTerceto(""+id,"_","_");System.out.print(",8"); :};
 factor ::= INTEGER_CONSTANT:constant {:Terceto.insertarElementoEnTS(""+constant,""+constant,"Int",0);Terceto.factor=Terceto.crearTerceto(""+constant,"_","_"); System.out.print(",9"); :};
 factor ::= FLOATCONSTANT:constant {:Terceto.insertarElementoEnTS(""+constant,""+constant,"Float",0); Terceto.factor=Terceto.crearTerceto(""+constant,"_","_"); System.out.print(",10" ); :};
