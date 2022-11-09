@@ -223,7 +223,7 @@ functionRepeatInline::= REPEAT INTEGER_CONSTANT:constant
                                     Terceto.crearTerceto(""+constant,"_","_");
                                     Terceto.crearTerceto("_INT_AUX_REPEAT"+auxTercRepeat_init,"_","_");
                                     Terceto.insertarElementoEnTS("_INT_AUX_REPEAT"+auxTercRepeat_init,"_INT_AUX_REPEAT"+auxTercRepeat_init,"Int",0);
-                                    Terceto.crearTerceto("CMP","_","_");
+                                    Terceto.crearTerceto("CMP","["+Terceto.contador+"]","["+(Terceto.contador-1)+"]");
                                     Terceto.crearTerceto("BGT","_ETIQ_"+(Terceto.contador+1),"_");
                                     auxTercRepeat_fin = Terceto.contador;:}
                                     CORCHOPEN bloque CORCHCLOSE
@@ -257,10 +257,10 @@ iteracion::=
 condicionWhile::=
 
     comparacion {:
-                        Terceto.crearTerceto("CMP","_","_");
+                        Terceto.crearTerceto("CMP","["+Terceto.contador+"]","["+(Terceto.contador-1)+"]");
                         Terceto.condicion=Terceto.crearTerceto(""+operaIf,"_ETIQ_"+(Terceto.contador+1),"_");
                         pilaWhileSaltos.add(Terceto.condicion);:} AND comparacion {:Terceto.crearTerceto("CMP","_","_");int x = pilaWhileSaltos.removeLast();Terceto.condicion=Terceto.crearTerceto(""+operaIf,"_ETIQ_"+x,"_");pilaWhileSaltos.add(x); :}
-	|comparacion {: Terceto.crearTerceto("CMP","_","_");
+	|comparacion {: Terceto.crearTerceto("CMP","["+Terceto.contador+"]","["+(Terceto.contador-1)+"]");
                     String etw = "_ETIQ_"+(Terceto.contador+1);
 	                 Terceto.condicion=Terceto.crearTerceto(""+operaIf,etw,"_");
 	                 Terceto.condicion = Terceto.crearTerceto("BRA","_ETIQ_"+(Terceto.contador+1),"_");
@@ -268,20 +268,20 @@ condicionWhile::=
 	                Terceto.actualizarEtiqueta(etw,Terceto.contador+1);
                     Terceto.crearTerceto(etw,"_","_");
 	                :}OR  comparacion  {:
-	                    Terceto.crearTerceto("CMP","_","_");
+	                    Terceto.crearTerceto("CMP","["+Terceto.contador+"]","["+(Terceto.contador-1)+"]");
 	                    int x = pilaWhileSaltos.removeLast();
                         Terceto.condicion=Terceto.crearTerceto(""+operaIf,"_ETIQ_"+(Terceto.contador+1),"_");
                         pilaWhileSaltos.add(Terceto.condicion);
                         Terceto.actualizarEtiqueta("_ETIQ_"+x,Terceto.contador+1);
                         Terceto.crearTerceto("_ETIQ_"+x,"_","_");
 	                :}
-    |comparacion {: Terceto.crearTerceto("CMP","_","_");
+    |comparacion {: Terceto.crearTerceto("CMP","["+Terceto.contador+"]","["+(Terceto.contador-1)+"]");
                     Terceto.condicion=Terceto.crearTerceto(""+operaIf,"_ETIQ_"+(Terceto.contador+1),"_");
                     pilaWhileSaltos.add(Terceto.condicion);:}
 
     |NOT OPEN_BRACKET comparacion CLOSE_BRACKET{:
                                                    String aux_operaIf = Terceto.invertirComparador(operaIf);
-                                                   Terceto.crearTerceto("CMP","_","_");
+                                                   Terceto.crearTerceto("CMP","["+Terceto.contador+"]","["+(Terceto.contador-1)+"]");
                                                    Terceto.condicion=Terceto.crearTerceto(""+aux_operaIf,"_ETIQ_"+(Terceto.contador+1),"_");
                                                    pilaWhileSaltos.add(Terceto.condicion);:};
 
@@ -332,8 +332,8 @@ seleccion::=
              	|{:pilaCaseSaltos.add(Terceto.contador+1);:} selCase {:int casePila = pilaCaseSaltos.removeLast();Terceto.actualizarEtiqueta("ETIQ_CASE_FIN"+casePila,Terceto.contador+1);Terceto.crearTerceto("ETIQ_CASE_FIN"+casePila,"_","_");:};
 
 condicion::=
-	 comparacion {:Terceto.crearTerceto("CMP","_","_");Terceto.condicion=Terceto.crearTerceto(""+operaIf,"_ETIQ_"+(Terceto.contador+1),"_"); pilaIfSaltos.add(Terceto.condicion);:} AND comparacion {:Terceto.crearTerceto("CMP","_","_"); int x = pilaIfSaltos.removeLast();Terceto.condicion=Terceto.crearTerceto(""+operaIf,"_ETIQ_"+x,"_");pilaIfSaltos.add(x); :}
-	|comparacion {: Terceto.crearTerceto("CMP","_","_");
+	 comparacion {:Terceto.crearTerceto("CMP","["+Terceto.contador+"]","["+(Terceto.contador-1)+"]");Terceto.condicion=Terceto.crearTerceto(""+operaIf,"_ETIQ_"+(Terceto.contador+1),"_"); pilaIfSaltos.add(Terceto.condicion);:} AND comparacion {:Terceto.crearTerceto("CMP","_","_"); int x = pilaIfSaltos.removeLast();Terceto.condicion=Terceto.crearTerceto(""+operaIf,"_ETIQ_"+x,"_");pilaIfSaltos.add(x); :}
+	|comparacion {: Terceto.crearTerceto("CMP","["+Terceto.contador+"]","["+(Terceto.contador-1)+"]");
                     String et = "_ETIQ_"+(Terceto.contador+1);
 	                Terceto.condicion=Terceto.crearTerceto(""+operaIf,et,"_");
 	                Terceto.condicion = Terceto.crearTerceto("BRA","_ETIQ_"+(Terceto.contador+1),"_");
@@ -341,14 +341,14 @@ condicion::=
 	                Terceto.actualizarEtiqueta(et,Terceto.contador+1);
                     Terceto.crearTerceto(et,"_","_");
 	                :}OR  comparacion  {:
-	                    Terceto.crearTerceto("CMP","_","_");
+	                    Terceto.crearTerceto("CMP","["+Terceto.contador+"]","["+(Terceto.contador-1)+"]");
 	                    int x = pilaIfSaltos.removeLast();
                         Terceto.condicion=Terceto.crearTerceto(""+operaIf,"_ETIQ_"+(Terceto.contador+1),"_");
                         pilaIfSaltos.add(Terceto.condicion);
                         Terceto.actualizarEtiqueta("_ETIQ_"+x,Terceto.contador+1);
                         Terceto.crearTerceto("_ETIQ_"+x,"_","_");
 	                :}
-	|comparacion {:Terceto.crearTerceto("CMP","_","_");Terceto.condicion=Terceto.crearTerceto(""+operaIf,"_ETIQ_"+(Terceto.contador+1),"_"); pilaIfSaltos.add(Terceto.condicion);:}
+	|comparacion {:Terceto.crearTerceto("CMP","["+Terceto.contador+"]","["+(Terceto.contador-1)+"]");Terceto.condicion=Terceto.crearTerceto(""+operaIf,"_ETIQ_"+(Terceto.contador+1),"_"); pilaIfSaltos.add(Terceto.condicion);:}
 	|NOT OPEN_BRACKET comparacion CLOSE_BRACKET{:String aux_operaIf = Terceto.invertirComparador(operaIf);Terceto.crearTerceto("CMP","_","_");Terceto.condicion=Terceto.crearTerceto(""+aux_operaIf,"_ETIQ_"+(Terceto.contador+1),"_"); pilaIfSaltos.add(Terceto.condicion);:};
 comparacion::= expression comparador expression ;
 comparador::=
