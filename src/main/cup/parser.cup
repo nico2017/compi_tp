@@ -4,6 +4,9 @@ import java_cup.runtime.*;
 import java.util.LinkedList;
 import lyc.compiler.files.SymbolTableGenerator;
 import lyc.compiler.files.FileOutputWriter;
+import java.util.Scanner;
+import java.io.FileNotFoundException;
+import java.io.FileReader;
 
 class Parser;
 
@@ -92,6 +95,78 @@ parser code{:
             s.setTableSymbol(Terceto.tableCSV);
             FileOutputWriter.writeOutput("symbol-table1.txt",s);
         }
+
+        public static void generarASM(){
+        String[] linea ;
+        String lineas = "";
+            try {
+                Scanner entrada = new Scanner(new FileReader("target/output/tercetos-semantica.txt"));
+                while (entrada.hasNextLine()) {
+                    linea = entrada.nextLine().split(" ");
+                    linea[1] = linea[1].replace("(","");
+                    linea[1] = linea[1].replace(")","");
+                    lineas += linea[1]+"\n";
+                    //System.out.println("dato. "+linea[1]);
+                }
+
+                System.out.println(lineas);
+                entrada.close();
+                String[] arrTercetos = lineas.split("\n");
+                String codigoASM = "";
+                for (int i = 0; i < arrTercetos.length; i++){
+                    String [] datos = arrTercetos[i].split(",");
+
+                    if(datos[1].equals("_") && datos[2].equals("_")){
+                        codigoASM+="fld "+datos[0]+"\n";
+                        codigoASM+="fstp _@aux_exp_"+(i+1)+"\n";
+                    }
+                    if(datos[0].equals("+") ){
+                        String puntero = datos[1].replace("[","").replace("]","");
+                        String puntero2 = datos[2].replace("[","").replace("]","");
+                        codigoASM+="ffree\n";
+                        codigoASM+="fld _@aux_exp_"+puntero+"\n";
+                        codigoASM+="fld _@aux_exp_"+puntero2+"\n";
+                        codigoASM+="fadd \n";
+                        codigoASM+="fstp _@aux_exp_"+(i+1)+"\n";
+                    }
+                    if(datos[0].equals("*") ){
+                        String puntero = datos[1].replace("[","").replace("]","");
+                        String puntero2 = datos[2].replace("[","").replace("]","");
+                        codigoASM+="ffree\n";
+                        codigoASM+="fld _@aux_exp_"+puntero+"\n";
+                        codigoASM+="fld _@aux_exp_"+puntero2+"\n";
+                        codigoASM+="fmul \n";
+                        codigoASM+="fstp _@aux_exp_"+(i+1)+"\n";
+                    }
+                    if(datos[0].equals("/") ){
+                        String puntero = datos[1].replace("[","").replace("]","");
+                        String puntero2 = datos[2].replace("[","").replace("]","");
+                        codigoASM+="ffree\n";
+                        codigoASM+="fld _@aux_exp_"+puntero+"\n";
+                        codigoASM+="fld _@aux_exp_"+puntero2+"\n";
+                        codigoASM+="fdiv \n";
+                        codigoASM+="fstp _@aux_exp_"+(i+1)+"\n";
+                    }
+                    if(datos[0].equals("-") ){
+                        String puntero = datos[1].replace("[","").replace("]","");
+                        String puntero2 = datos[2].replace("[","").replace("]","");
+                        codigoASM+="ffree\n";
+                        codigoASM+="fld _@aux_exp_"+puntero+"\n";
+                        codigoASM+="fld _@aux_exp_"+puntero2+"\n";
+                        codigoASM+="fsub \n";
+                        codigoASM+="fstp _@aux_exp_"+(i+1)+"\n";
+                    }
+                    if(datos[0].equals("=") ){
+                        String puntero2 = datos[2].replace("[","").replace("]","");
+                        codigoASM+="ffree\n";
+                        codigoASM+="fld _@aux_exp_"+puntero2+"\n";
+                        codigoASM+="fstp "+datos[1]+"\n";
+                    }
+                }
+                System.out.println(codigoASM);
+            } catch (FileNotFoundException e) {}
+
+        }
     }
  :}
 
@@ -170,7 +245,7 @@ non terminal condicionWhile;
 // Start Symbol Definition
 start with programa;
 
-programa ::= bloque{:Terceto.guardarTS(); System.out.println("BLOQUE ES PROGRAMA = End \n Tabla de simbolos: \n");  Terceto.guardarTercetos();  :};
+programa ::= bloque{:Terceto.guardarTS();Terceto.guardarTercetos();Terceto.generarASM();  :};
 
 bloque ::= bloque sentence {: System.out.println("BLOQUE + SETENCIA ES BLOQUE"); :}
            |sentence {: System.out.println("SEnTENCIA ES BLOQUE"); :};
@@ -237,7 +312,7 @@ functionRepeatInline::= REPEAT INTEGER_CONSTANT:constant
                                     Terceto.crearTerceto("_ETIQ_"+auxTercRepeat_fin,"_","_");:};
 comment::= COMENTARIOS;
 escribiendo ::= WRITES OPEN_BRACKET wr_data CLOSE_BRACKET ;
-wr_data ::= IDENTIFIER:id {: Terceto.crearTerceto("WRITE",""+id,"_"); :}| STRCONSTANT:constant{:Terceto.insertarElementoEnTS(""+constant,""+constant,"String",0); Terceto.crearTerceto("WRITE",""+constant,"_"); :};
+wr_data ::= IDENTIFIER:id {: Terceto.crearTerceto("WRITE",""+id,"_"); :}| STRCONSTANT:constant{:Terceto.insertarElementoEnTS(""+constant,""+constant,"String",0); String s =   String.valueOf(constant); Terceto.crearTerceto("WRITE",""+((s.replace(" ","_")).replace(",",";")),"_"); :};
 leyendo::= READ OPEN_BRACKET IDENTIFIER:id {: Terceto.crearTerceto("READ",""+id,"_"); :} CLOSE_BRACKET ;
 
 iteracion::=
@@ -246,7 +321,7 @@ iteracion::=
 	        pilaWhileSaltos2.add(Terceto.contador);:} condicionWhile CLOSE_BRACKET KEYOPEN
 	bloque
 	    {:  int whileSaltoAux = pilaWhileSaltos2.removeLast();
-	        Terceto.crearTerceto("BRA","["+whileSaltoAux+"]","");
+	        Terceto.crearTerceto("BRA","["+whileSaltoAux+"]","_");
 
 	        whileSaltoAux = pilaWhileSaltos.removeLast();
 	        Terceto.actualizarEtiqueta("_ETIQ_"+whileSaltoAux,Terceto.contador+1);
@@ -313,7 +388,7 @@ listCase::=CASE condicion bloque
 seleccion::=
              	IF OPEN_BRACKET condicion  CLOSE_BRACKET KEYOPEN bloque
               KEYCLOSE  {: int ifSaltoAux = pilaIfSaltos.removeLast();
-                            Terceto.crearTerceto("BRA","["+(Terceto.contador+1)+"]","");
+                            Terceto.crearTerceto("BRA","["+(Terceto.contador+1)+"]","_");
                             pilaIfSaltos.add(Terceto.contador);
                             Terceto.actualizarEtiqueta("_ETIQ_"+ifSaltoAux,Terceto.contador+1);
                             Terceto.crearTerceto("_ETIQ_"+ifSaltoAux,"_","_"); :}
