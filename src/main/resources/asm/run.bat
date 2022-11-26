@@ -1,10 +1,10 @@
 PATH=C:\TASM;
 
 tasm numbers.asm
-tasm final.asm
-tlink final.obj numbers.obj
-final.exe
-del final.obj
-del numbers.obj 
-del final.exe
-del final.map
+tasm final1.asm
+tlink final1.obj numbers.obj
+final1.exe
+del final1.obj
+del numbers.obj
+del final1.exe
+del final1.map

@@ -5,8 +5,13 @@ import java.io.IOException;
 
 public class AsmCodeGenerator implements FileGenerator {
 
+    private String asm = "TODO";
+
+    public void setASM(String tiraToken){
+        this.asm = tiraToken;
+    }
     @Override
     public void generate(FileWriter fileWriter) throws IOException {
-        fileWriter.write("TODO");
+        fileWriter.write(this.asm);
     }
 }

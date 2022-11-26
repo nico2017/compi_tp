@@ -1,1 +1,48 @@
-REPEAT 3 [s = 3 if (3 > 1) {a = 3} u=2*3+123/43]
+Init {
+    u,c : Float
+    a,b,s : Int
+    p1, p2, p3 : String
+}
+u = 0
+a = 0
+s = 0
+
+write("TEST REPEAT")
+REPEAT 3 [s = s + 3.1 if (s > 6 AND s < 9) {write("vari s > 6")}]
+
+write("TEST WHILE")
+while(u < 33){
+    u = u + 100*100/1000+2
+}
+
+write("TEST WRITE")
+write("El resultado de u es:")
+write(u)
+
+write("TEST IF")
+if (a > s)
+{
+    write("a es grande que s")
+}
+else
+{
+    write("a es chico o igual a s")
+}
+
+a = 1
+b = 1
+c = 2
+
+if (a > b AND c > b)
+{
+    write("a > b y c > b")
+}else{
+    write("a <= b o c <= b")
+}
+
+write("TEST ASIG Y CAL ARIT")
+
+c = 0
+c=11+b*(b-.21)/4.3
+write("RESUL CALC ARIT")
+write(c)

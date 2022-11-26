@@ -1,13 +1,25 @@
 package lyc.compiler;
 
+
 import java_cup.runtime.*;
 import java.util.LinkedList;
 import lyc.compiler.files.SymbolTableGenerator;
+import lyc.compiler.files.AsmCodeGenerator;
 import lyc.compiler.files.FileOutputWriter;
 import java.util.Scanner;
 import java.io.FileNotFoundException;
 import java.io.FileReader;
-
+import java.io.BufferedWriter;
+import java.io.File;
+import java.io.FileWriter;
+    import java.io.FileNotFoundException;
+    import java.io.IOException;
+    import java.nio.file.Files;
+    import java.nio.file.Path;
+    import java.nio.file.Paths;
+    import java.nio.file.StandardCopyOption;
+    import java.util.logging.Level;
+    import java.util.logging.Logger;
 class Parser;
 
 parser code{:
@@ -22,6 +34,7 @@ parser code{:
     LinkedList<Integer> pilaWhileSaltos2    = new LinkedList<Integer>();
     LinkedList<Integer> pilaCaseSaltos    = new LinkedList<Integer>();
     LinkedList<String>  listVariables    = new LinkedList<String>();
+    String codeASM = "";
     public class Terceto {
         public static int sentence,condicionWhile,assignment,expression,term,factor,programa,bloque,declaracion,iteracion,seleccion,escribiendo,leyendo,wr_data
                 ,condicion,comparacion,comparador,comment,selCase,listCase,functionRepeatInline,listVar,decc,variablesListadas;
@@ -100,6 +113,7 @@ parser code{:
         String[] linea =null ;
         String lineas = "";
         String codigoASMTS = "";
+        String codigoASM = "";
         try {
             Scanner entrada = new Scanner(new FileReader("target/output/symbol-table1.txt"));
             while (entrada.hasNextLine()) {
@@ -116,11 +130,10 @@ parser code{:
                         codigoASMTS+= "_"+linea[0]+" dd "+linea[1]+".0 \n";
                     }else if(linea[2].equals("Float")){
 
-                        codigoASMTS+= "_"+linea[0]+" dd  "+linea[0]+" \n";
+                        codigoASMTS+= "_"+linea[0].replace(".","_")+" dd  "+linea[0]+" \n";
                     }else{
                         String aux_str =linea[0] ;
-                        linea[0] = linea[0].replace("\"","");
-                        linea[0] = linea[0].replace(" ","_");
+                        linea[0] = linea[0].replaceAll("[^\\dA-Za-z]","");
 
                         codigoASMTS+= "_"+linea[0]+" db  "+aux_str+",'$', "+aux_str.length()+" dup (?) \n";
                     }
@@ -135,13 +148,12 @@ parser code{:
                     linea[1] = linea[1].replace("(","");
                     linea[1] = linea[1].replace(")","");
                     lineas += linea[1]+"\n";
-                    //System.out.println("dato. "+linea[1]);
                 }
 
                 System.out.println(lineas);
                 entrada.close();
                 String[] arrTercetos = lineas.split("\n");
-                String codigoASM = "";
+
                 for (int i = 0; i < arrTercetos.length; i++){
                     String [] datos = arrTercetos[i].split(",");
                     if(
@@ -161,8 +173,8 @@ parser code{:
                         String puntero = datos[1].replace("[","").replace("]","");
                         String puntero2 = datos[2].replace("[","").replace("]","");
                         codigoASM+="ffree\n";
-                        codigoASM+="fld _@aux_exp_"+puntero+"\n";
                         codigoASM+="fld _@aux_exp_"+puntero2+"\n";
+                        codigoASM+="fld _@aux_exp_"+puntero+"\n";
                         codigoASM+="fxch\n";
                         codigoASM+="fcom\n";
                         codigoASM+="fstsw ax\n";
@@ -174,7 +186,7 @@ parser code{:
                     if(datos[1].equals("_") && datos[2].equals("_") && !datos[0].contains("ETIQ_") ){
 
                         //NO ES STRING
-                        codigoASM+="fld _"+datos[0]+"\n";
+                        codigoASM+="fld _"+datos[0].replace(".","_")+"\n";
                         codigoASM+="fstp _@aux_exp_"+(i+1)+"\n";
                         codigoASMTS+= "_@aux_exp_"+(i+1)+" dd  ?  \n";
 
@@ -227,27 +239,80 @@ parser code{:
                             String puntero2 = datos[2].replace("[","").replace("]","");
                             codigoASM+="ffree\n";
                             codigoASM+="fld _@aux_exp_"+puntero2+"\n";
-                            codigoASM+="fstp "+datos[1]+"\n";
+                            codigoASM+="fstp _"+datos[1]+"\n";
                         }else{
-                            datos[2] = datos[2].replace("\"","").replace(" ","_");
+                            datos[2] = datos[2].replaceAll("[^\\dA-Za-z]","");
                             codigoASM+="fld _"+datos[2]+"\n";
-                            codigoASM+="fstp "+datos[1]+"\n";
+                            codigoASM+="fstp _"+datos[1]+"\n";
                         }
 
                     }
                     if(datos[0].equals("WRITE") ){
-                        datos[1] = datos[1].replace("\"","").replace(" ","_");
-                        codigoASM+="mov dx,OFFSET _"+datos[1]+"\n";
-                        codigoASM+="mov ah,9 \n";
-                        codigoASM+="int 21h\n";
-                        codigoASM+="newLine 1\n";
+                        datos[1] = datos[1].replaceAll("[^\\dA-Za-z]","");
+                        if(codigoASMTS.contains("_"+datos[1]+" dd")){
+                            //quiere imprimir numero. cambio rutina
+                            codigoASM+="displayFloat _"+datos[1]+",2\n";
+                        }else{
+                            codigoASM+="mov dx,OFFSET _"+datos[1]+"\n";
+                            codigoASM+="mov ah,9 \n";
+                            codigoASM+="int 21h\n";
+                            codigoASM+="newLine 1\n";
+                        }
+
                     }
                     if(datos[0].equals("READ") ){
+                        datos[1] = datos[1].replaceAll("[^\\dA-Za-z]","");
                         codigoASM+="getString _"+datos[1]+"\n";
                     }
                 }
-                System.out.println("include macros2.asm \ninclude number.asm \n.MODEL  LARGE \n.386 \n.STACK 200h \n.DATA \n"+codigoASMTS+"\n.CODE \n MAIN:\nMOV AX,@DATA   ;inicializa el segmento de datos\nMOV DS,AX \nMOV ES,AX \nFNINIT \n"+codigoASM);
+                String header = "";
+                header+= "include macros2.asm \n";
+                header+= "include number.asm \n";
+                header+= ".MODEL  LARGE \n";
+                header+= ".386 \n";
+                header+= ".STACK 200h \n";
+                header+= "MAXTEXTSIZE equ 50 \n";
+
+                header+= ".DATA \n";
+                header+=codigoASMTS+"\n";
+                header+="_msgPRESIONE db  0DH,0AH,\"Presione una tecla para continuar...\",'$'\n";
+                header+=".CODE \n";
+                header+="MAIN:\n";
+                header+="MOV AX,@DATA   ;inicializa el segmento de datos\n";
+                header+="MOV DS,AX \n";
+                header+="MOV ES,AX \n";
+                header+="FNINIT \n";
+                codigoASM = header + codigoASM ;
+
+                codigoASM+= "mov dx,OFFSET _msgPRESIONE\n";
+                codigoASM+= "mov ah,09\n";
+                codigoASM+= "int 21h\n";
+                codigoASM+= "mov ah, 1\n";
+                codigoASM+= "int 21h\n";
+                codigoASM+= "mov ax, 4C00h\n";
+                codigoASM+= "int 21h\n";
+                codigoASM+= "\nEND MAIN";
+
+                codigoASM= codigoASM.replace("BLT","JB");
+                codigoASM= codigoASM.replace("BGT","JA");
+                codigoASM= codigoASM.replace("BGE","JAE");
+                codigoASM= codigoASM.replace("BLE","JNA");
+                codigoASM= codigoASM.replace("BNE","JNE");
+                codigoASM= codigoASM.replace("BEQ","JE");
+                codigoASM= codigoASM.replace("BI","JMP");
+                System.out.println(codigoASM);
             } catch (FileNotFoundException e) {}
+
+            AsmCodeGenerator s = new AsmCodeGenerator();
+            s.setASM(codigoASM);
+            FileOutputWriter.writeOutput("final1.asm",s);
+            Path origenPath = Paths.get("target/output/final1.asm");
+            Path destinoPath = Paths.get("target/asm/final1.asm");
+            try {
+                Files.copy(origenPath,destinoPath);
+            }catch (IOException e) {
+                e.printStackTrace();
+            }
 
         }
     }
@@ -378,9 +443,8 @@ functionRepeatInline::= REPEAT INTEGER_CONSTANT:constant
                                 {:  Terceto.insertarElementoEnTS(""+constant,""+constant,"Int",0);
                                     auxTercRepeat_init = Terceto.contador+1;
                                     Terceto.crearTerceto("ETIQ_REPEAT_INIT"+auxTercRepeat_init,"_","_");
-                                    Terceto.crearTerceto(""+constant,"_","_");
                                     Terceto.crearTerceto("INT_AUX_REPEAT"+auxTercRepeat_init,"_","_");
-                                    aux_terceto = Terceto.contador;
+                                    Terceto.crearTerceto(""+constant,"_","_");
                                     Terceto.insertarElementoEnTS("INT_AUX_REPEAT"+auxTercRepeat_init,"1","Int",0);
                                     Terceto.crearTerceto("CMP","["+Terceto.contador+"]","["+(Terceto.contador-1)+"]");
                                     Terceto.crearTerceto("BGT","_ETIQ_"+(Terceto.contador+1),"_");
@@ -418,7 +482,7 @@ condicionWhile::=
     comparacion {:
                         Terceto.crearTerceto("CMP","["+Terceto.contador+"]","["+(Terceto.contador-1)+"]");
                         Terceto.condicion=Terceto.crearTerceto(""+operaIf,"_ETIQ_"+(Terceto.contador+1),"_");
-                        pilaWhileSaltos.add(Terceto.condicion);:} AND comparacion {:Terceto.crearTerceto("CMP","_","_");int x = pilaWhileSaltos.removeLast();Terceto.condicion=Terceto.crearTerceto(""+operaIf,"_ETIQ_"+x,"_");pilaWhileSaltos.add(x); :}
+                        pilaWhileSaltos.add(Terceto.condicion);:} AND comparacion {:Terceto.crearTerceto("CMP","["+Terceto.contador+"]","["+(Terceto.contador-1)+"]");int x = pilaWhileSaltos.removeLast();Terceto.condicion=Terceto.crearTerceto(""+operaIf,"_ETIQ_"+x,"_");pilaWhileSaltos.add(x); :}
 	|comparacion {: Terceto.crearTerceto("CMP","["+Terceto.contador+"]","["+(Terceto.contador-1)+"]");
                     String etw = "_ETIQ_"+(Terceto.contador+1);
 	                 Terceto.condicion=Terceto.crearTerceto(""+operaIf,etw,"_");
@@ -472,7 +536,7 @@ listCase::=CASE condicion bloque
 seleccion::=
              	IF OPEN_BRACKET condicion  CLOSE_BRACKET KEYOPEN bloque
               KEYCLOSE  {: int ifSaltoAux = pilaIfSaltos.removeLast();
-                            Terceto.crearTerceto("BRA","["+(Terceto.contador+1)+"]","_");
+                            Terceto.crearTerceto("BRA","_ETIQ_"+(Terceto.contador+1),"_");
                             pilaIfSaltos.add(Terceto.contador);
                             Terceto.actualizarEtiqueta("_ETIQ_"+ifSaltoAux,Terceto.contador+1);
                             Terceto.crearTerceto("_ETIQ_"+ifSaltoAux,"_","_"); :}
@@ -491,7 +555,7 @@ seleccion::=
              	|{:pilaCaseSaltos.add(Terceto.contador+1);:} selCase {:int casePila = pilaCaseSaltos.removeLast();Terceto.actualizarEtiqueta("ETIQ_CASE_FIN"+casePila,Terceto.contador+1);Terceto.crearTerceto("ETIQ_CASE_FIN"+casePila,"_","_");:};
 
 condicion::=
-	 comparacion {:Terceto.crearTerceto("CMP","["+Terceto.contador+"]","["+(Terceto.contador-1)+"]");Terceto.condicion=Terceto.crearTerceto(""+operaIf,"_ETIQ_"+(Terceto.contador+1),"_"); pilaIfSaltos.add(Terceto.condicion);:} AND comparacion {:Terceto.crearTerceto("CMP","_","_"); int x = pilaIfSaltos.removeLast();Terceto.condicion=Terceto.crearTerceto(""+operaIf,"_ETIQ_"+x,"_");pilaIfSaltos.add(x); :}
+	 comparacion {:Terceto.crearTerceto("CMP","["+Terceto.contador+"]","["+(Terceto.contador-1)+"]");Terceto.condicion=Terceto.crearTerceto(""+operaIf,"_ETIQ_"+(Terceto.contador+1),"_"); pilaIfSaltos.add(Terceto.condicion);:} AND comparacion {:Terceto.crearTerceto("CMP","["+Terceto.contador+"]","["+(Terceto.contador-1)+"]"); int x = pilaIfSaltos.removeLast();Terceto.condicion=Terceto.crearTerceto(""+operaIf,"_ETIQ_"+x,"_");pilaIfSaltos.add(x); :}
 	|comparacion {: Terceto.crearTerceto("CMP","["+Terceto.contador+"]","["+(Terceto.contador-1)+"]");
                     String et = "_ETIQ_"+(Terceto.contador+1);
 	                Terceto.condicion=Terceto.crearTerceto(""+operaIf,et,"_");
@@ -508,7 +572,7 @@ condicion::=
                         Terceto.crearTerceto("_ETIQ_"+x,"_","_");
 	                :}
 	|comparacion {:Terceto.crearTerceto("CMP","["+Terceto.contador+"]","["+(Terceto.contador-1)+"]");Terceto.condicion=Terceto.crearTerceto(""+operaIf,"_ETIQ_"+(Terceto.contador+1),"_"); pilaIfSaltos.add(Terceto.condicion);:}
-	|NOT OPEN_BRACKET comparacion CLOSE_BRACKET{:String aux_operaIf = Terceto.invertirComparador(operaIf);Terceto.crearTerceto("CMP","_","_");Terceto.condicion=Terceto.crearTerceto(""+aux_operaIf,"_ETIQ_"+(Terceto.contador+1),"_"); pilaIfSaltos.add(Terceto.condicion);:};
+	|NOT OPEN_BRACKET comparacion CLOSE_BRACKET{:String aux_operaIf = Terceto.invertirComparador(operaIf);Terceto.crearTerceto("CMP","["+Terceto.contador+"]","["+(Terceto.contador-1)+"]");Terceto.condicion=Terceto.crearTerceto(""+aux_operaIf,"_ETIQ_"+(Terceto.contador+1),"_"); pilaIfSaltos.add(Terceto.condicion);:};
 comparacion::= expression comparador expression ;
 comparador::=
 	CMP_MA_IGUAL    {:operaIf = "BLT";:}
