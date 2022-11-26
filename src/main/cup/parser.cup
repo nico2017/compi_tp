@@ -80,12 +80,12 @@ parser code{:
                     System.exit(1);
                 }else{
                     //No está repetido. agrego a tabla
-                    Terceto.tableCSV+=nombre+";"+valor+";"+tipo+"\n";
+                    Terceto.tableCSV+=nombre+";"+valor+";"+tipo+";variable\n";
                 }
             }else {
                 if(!(Terceto.tableCSV).contains(nombre+";"+valor+";"+tipo)){
                     //Constante todavía no existe. la agrego
-                    Terceto.tableCSV+=nombre+";"+valor+";"+tipo+"\n";
+                    Terceto.tableCSV+=nombre+";"+valor+";"+tipo+";cte\n";
                 }
             }
         }
@@ -97,8 +97,37 @@ parser code{:
         }
 
         public static void generarASM(){
-        String[] linea ;
+        String[] linea =null ;
         String lineas = "";
+        String codigoASMTS = "";
+        try {
+            Scanner entrada = new Scanner(new FileReader("target/output/symbol-table1.txt"));
+            while (entrada.hasNextLine()) {
+                linea = entrada.nextLine().split(";");
+                if(linea[3].equals("variable")){
+                    if(linea[2].equals("String")){
+                        codigoASMTS+= "_"+linea[0]+" db  MAXTEXTSIZE dup (?),'$'\n";
+                    }else{
+                        codigoASMTS+= "_"+linea[0]+" dd  ? \n";
+                    }
+                }else{
+
+                    if(linea[2].equals("Int")){
+                        codigoASMTS+= "_"+linea[0]+" dd "+linea[0]+".0 \n";
+                    }else if(linea[2].equals("Float")){
+
+                        codigoASMTS+= "_"+linea[0]+" dd  "+linea[0]+" \n";
+                    }else{
+                        String aux_str =linea[0] ;
+                        linea[0] = linea[0].replace("\"","");
+                        linea[0] = linea[0].replace(" ","_");
+
+                        codigoASMTS+= "_"+linea[0]+" db  "+aux_str+",'$', "+aux_str.length()+" dup (?) \n";
+                    }
+                }
+            }
+        }catch (FileNotFoundException e) {}
+
             try {
                 Scanner entrada = new Scanner(new FileReader("target/output/tercetos-semantica.txt"));
                 while (entrada.hasNextLine()) {
@@ -115,10 +144,41 @@ parser code{:
                 String codigoASM = "";
                 for (int i = 0; i < arrTercetos.length; i++){
                     String [] datos = arrTercetos[i].split(",");
+                    if(
+                        datos[0].equals("BLT") ||
+                        datos[0].equals("BGT") ||
+                        datos[0].equals("BGE") ||
+                        datos[0].equals("BLE") ||
+                        datos[0].equals("BNE") ||
+                        datos[0].equals("BEQ") ||
+                        datos[0].equals("BRA")){
+                        String puntero = datos[1].replace("[","").replace("]","");
+                        String [] datos2 = arrTercetos[(Integer.parseInt(puntero)-1)].split(",");
+                        datos[0] = datos[0].replace("BRA","BI");
+                        codigoASM+= datos[0]+" "+datos2[0]+"\n";
+                    }
+                    if(datos[0].equals("CMP")){
+                        String puntero = datos[1].replace("[","").replace("]","");
+                        String puntero2 = datos[2].replace("[","").replace("]","");
+                        codigoASM+="ffree\n";
+                        codigoASM+="fld _@aux_exp_"+puntero+"\n";
+                        codigoASM+="fld _@aux_exp_"+puntero2+"\n";
+                        codigoASM+="fxch\n";
+                        codigoASM+="fcom\n";
+                        codigoASM+="fstsw ax\n";
+                        codigoASM+="sahf\n";
+                    }
+                    if(datos[0].contains("ETIQ_")){
+                        codigoASM+=datos[0]+":\n";
+                    }
+                    if(datos[1].equals("_") && datos[2].equals("_") && !datos[0].contains("ETIQ_") ){
 
-                    if(datos[1].equals("_") && datos[2].equals("_")){
-                        codigoASM+="fld "+datos[0]+"\n";
+                        //NO ES STRING
+                        codigoASM+="fld _"+datos[0]+"\n";
                         codigoASM+="fstp _@aux_exp_"+(i+1)+"\n";
+                        codigoASMTS+= "_@aux_exp_"+(i+1)+" dd  ?  \n";
+
+
                     }
                     if(datos[0].equals("+") ){
                         String puntero = datos[1].replace("[","").replace("]","");
@@ -128,6 +188,8 @@ parser code{:
                         codigoASM+="fld _@aux_exp_"+puntero2+"\n";
                         codigoASM+="fadd \n";
                         codigoASM+="fstp _@aux_exp_"+(i+1)+"\n";
+
+                        codigoASMTS+= "_@aux_exp_"+(i+1)+" dd  ?  \n";
                     }
                     if(datos[0].equals("*") ){
                         String puntero = datos[1].replace("[","").replace("]","");
@@ -137,6 +199,7 @@ parser code{:
                         codigoASM+="fld _@aux_exp_"+puntero2+"\n";
                         codigoASM+="fmul \n";
                         codigoASM+="fstp _@aux_exp_"+(i+1)+"\n";
+                        codigoASMTS+= "_@aux_exp_"+(i+1)+" dd  ?  \n";
                     }
                     if(datos[0].equals("/") ){
                         String puntero = datos[1].replace("[","").replace("]","");
@@ -146,6 +209,7 @@ parser code{:
                         codigoASM+="fld _@aux_exp_"+puntero2+"\n";
                         codigoASM+="fdiv \n";
                         codigoASM+="fstp _@aux_exp_"+(i+1)+"\n";
+                        codigoASMTS+= "_@aux_exp_"+(i+1)+" dd  ?  \n";
                     }
                     if(datos[0].equals("-") ){
                         String puntero = datos[1].replace("[","").replace("]","");
@@ -155,15 +219,25 @@ parser code{:
                         codigoASM+="fld _@aux_exp_"+puntero2+"\n";
                         codigoASM+="fsub \n";
                         codigoASM+="fstp _@aux_exp_"+(i+1)+"\n";
+
+                        codigoASMTS+= "_@aux_exp_"+(i+1)+" dd  ?  \n";
                     }
                     if(datos[0].equals("=") ){
-                        String puntero2 = datos[2].replace("[","").replace("]","");
-                        codigoASM+="ffree\n";
-                        codigoASM+="fld _@aux_exp_"+puntero2+"\n";
-                        codigoASM+="fstp "+datos[1]+"\n";
+                        if(!datos[2].contains("\"")){
+                            String puntero2 = datos[2].replace("[","").replace("]","");
+                            codigoASM+="ffree\n";
+                            codigoASM+="fld _@aux_exp_"+puntero2+"\n";
+                            codigoASM+="fstp "+datos[1]+"\n";
+                        }else{
+                            linea[0] = linea[0].replace("\"","");
+                            linea[0] = linea[0].replace(" ","_");
+                            codigoASM+="fld _"+linea[0]+"\n";
+                            codigoASM+="fstp "+datos[1]+"\n";
+                        }
+
                     }
                 }
-                System.out.println(codigoASM);
+                System.out.println(codigoASMTS+codigoASM);
             } catch (FileNotFoundException e) {}
 
         }
@@ -435,14 +509,14 @@ comparador::=
 	|CMP_DIST       {:operaIf = "BEQ";:};
 
 assignment::= IDENTIFIER:id ASSIG STRCONSTANT:constant{:Terceto.insertarElementoEnTS(""+constant,""+constant,"String",0);Terceto.crearTerceto("=",""+id,""+constant);:};
-assignment ::= IDENTIFIER:id ASSIG expression {: Terceto.assignment=Terceto.crearTerceto("=",""+id,"["+Terceto.expression+"]");  :};
-expression ::= expression PLUS term {:Terceto.expression=Terceto.crearTerceto("+","["+Terceto.expression+"]","["+Terceto.term+"]");:};
-expression ::= expression SUB term {:Terceto.expression=Terceto.crearTerceto("-","["+Terceto.expression+"]","["+Terceto.term+"]");:};
-expression ::= term {:Terceto.expression= Terceto.term; :};
-term ::= term MULT factor {:Terceto.term=Terceto.crearTerceto("*","["+Terceto.term+"]","["+Terceto.factor+"]"); :};
-term ::= term DIV factor {:Terceto.term=Terceto.crearTerceto("/","["+Terceto.term+"]","["+Terceto.factor+"]"); :};
-term ::= factor {:Terceto.term = Terceto.factor;  :};
+assignment ::= IDENTIFIER:id ASSIG expression {: Terceto.assignment=Terceto.crearTerceto("=",""+id,"["+Terceto.expression+"]");  System.out.print(",1" );:};
+expression ::= expression PLUS term {:Terceto.expression=Terceto.crearTerceto("+","["+Terceto.expression+"]","["+Terceto.term+"]");System.out.print(",2" );:};
+expression ::= expression SUB term {:Terceto.expression=Terceto.crearTerceto("-","["+Terceto.expression+"]","["+Terceto.term+"]");System.out.print(",3" );:};
+expression ::= term {:Terceto.expression= Terceto.term; System.out.print(",4" );:};
+term ::= term MULT factor {:Terceto.term=Terceto.crearTerceto("*","["+Terceto.term+"]","["+Terceto.factor+"]");System.out.print(",5" ); :};
+term ::= term DIV factor {:Terceto.term=Terceto.crearTerceto("/","["+Terceto.term+"]","["+Terceto.factor+"]");System.out.print(",6" ); :};
+term ::= factor {:Terceto.term = Terceto.factor;System.out.print(",7" );  :};
 factor ::= IDENTIFIER:id  {: Terceto.factor=Terceto.crearTerceto(""+id,"_","_");System.out.print(",8"); :};
 factor ::= INTEGER_CONSTANT:constant {:Terceto.insertarElementoEnTS(""+constant,""+constant,"Int",0);Terceto.factor=Terceto.crearTerceto(""+constant,"_","_"); System.out.print(",9"); :};
 factor ::= FLOATCONSTANT:constant {:Terceto.insertarElementoEnTS(""+constant,""+constant,"Float",0); Terceto.factor=Terceto.crearTerceto(""+constant,"_","_"); System.out.print(",10" ); :};
-factor ::= {:pilaExp.add(Terceto.expression);:}OPEN_BRACKET expression CLOSE_BRACKET {:Terceto.factor = Terceto.expression;Terceto.expression = pilaExp.removeLast(); System.out.print(",11"); :};
+factor ::= {:pilaExp.add(Terceto.expression);pilaExp.add(Terceto.term);:}OPEN_BRACKET expression CLOSE_BRACKET {:Terceto.factor = Terceto.expression;Terceto.term =pilaExp.removeLast();Terceto.expression = pilaExp.removeLast(); System.out.print(",11"); :};
