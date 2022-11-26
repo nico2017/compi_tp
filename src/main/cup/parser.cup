@@ -13,7 +13,7 @@ class Parser;
 parser code{:
 
 
-    int auxTercRepeat_init=0,auxTercRepeat_fin=0,auxTercOR=0, cont=0;
+    int auxTercRepeat_init=0,auxTercRepeat_fin=0,auxTercOR=0, cont=0,aux_terceto=0;
     String operaIf = "";
     LinkedList<Integer> pilaExp         = new LinkedList<Integer>();
     LinkedList<Integer> pilaIfSaltos    = new LinkedList<Integer>();
@@ -40,7 +40,7 @@ parser code{:
         }
         public static int crearTerceto(String i,String ii,String iii){
             contador++;
-            terc+="["+contador+"] ";
+            terc+="["+contador+"]&&";
             terc+= "("+i+","+ii+","+iii+")\n";
             return contador;
         }
@@ -113,7 +113,7 @@ parser code{:
                 }else{
 
                     if(linea[2].equals("Int")){
-                        codigoASMTS+= "_"+linea[0]+" dd "+linea[0]+".0 \n";
+                        codigoASMTS+= "_"+linea[0]+" dd "+linea[1]+".0 \n";
                     }else if(linea[2].equals("Float")){
 
                         codigoASMTS+= "_"+linea[0]+" dd  "+linea[0]+" \n";
@@ -131,7 +131,7 @@ parser code{:
             try {
                 Scanner entrada = new Scanner(new FileReader("target/output/tercetos-semantica.txt"));
                 while (entrada.hasNextLine()) {
-                    linea = entrada.nextLine().split(" ");
+                    linea = entrada.nextLine().split("&&");
                     linea[1] = linea[1].replace("(","");
                     linea[1] = linea[1].replace(")","");
                     lineas += linea[1]+"\n";
@@ -229,15 +229,24 @@ parser code{:
                             codigoASM+="fld _@aux_exp_"+puntero2+"\n";
                             codigoASM+="fstp "+datos[1]+"\n";
                         }else{
-                            linea[0] = linea[0].replace("\"","");
-                            linea[0] = linea[0].replace(" ","_");
-                            codigoASM+="fld _"+linea[0]+"\n";
+                            datos[2] = datos[2].replace("\"","").replace(" ","_");
+                            codigoASM+="fld _"+datos[2]+"\n";
                             codigoASM+="fstp "+datos[1]+"\n";
                         }
 
                     }
+                    if(datos[0].equals("WRITE") ){
+                        datos[1] = datos[1].replace("\"","").replace(" ","_");
+                        codigoASM+="mov dx,OFFSET _"+datos[1]+"\n";
+                        codigoASM+="mov ah,9 \n";
+                        codigoASM+="int 21h\n";
+                        codigoASM+="newLine 1\n";
+                    }
+                    if(datos[0].equals("READ") ){
+                        codigoASM+="getString _"+datos[1]+"\n";
+                    }
                 }
-                System.out.println(codigoASMTS+codigoASM);
+                System.out.println("include macros2.asm \ninclude number.asm \n.MODEL  LARGE \n.386 \n.STACK 200h \n.DATA \n"+codigoASMTS+"\n.CODE \n MAIN:\nMOV AX,@DATA   ;inicializa el segmento de datos\nMOV DS,AX \nMOV ES,AX \nFNINIT \n"+codigoASM);
             } catch (FileNotFoundException e) {}
 
         }
@@ -370,17 +379,18 @@ functionRepeatInline::= REPEAT INTEGER_CONSTANT:constant
                                     auxTercRepeat_init = Terceto.contador+1;
                                     Terceto.crearTerceto("ETIQ_REPEAT_INIT"+auxTercRepeat_init,"_","_");
                                     Terceto.crearTerceto(""+constant,"_","_");
-                                    Terceto.crearTerceto("_INT_AUX_REPEAT"+auxTercRepeat_init,"_","_");
-                                    Terceto.insertarElementoEnTS("_INT_AUX_REPEAT"+auxTercRepeat_init,"_INT_AUX_REPEAT"+auxTercRepeat_init,"Int",0);
+                                    Terceto.crearTerceto("INT_AUX_REPEAT"+auxTercRepeat_init,"_","_");
+                                    aux_terceto = Terceto.contador;
+                                    Terceto.insertarElementoEnTS("INT_AUX_REPEAT"+auxTercRepeat_init,"1","Int",0);
                                     Terceto.crearTerceto("CMP","["+Terceto.contador+"]","["+(Terceto.contador-1)+"]");
                                     Terceto.crearTerceto("BGT","_ETIQ_"+(Terceto.contador+1),"_");
                                     auxTercRepeat_fin = Terceto.contador;:}
                                     CORCHOPEN bloque CORCHCLOSE
-                                {:  Terceto.crearTerceto("_INT_AUX_REPEAT"+auxTercRepeat_init,"_","_");
-                                    Terceto.crearTerceto("1","_","_");
+                                {:  int aux  = Terceto.crearTerceto("INT_AUX_REPEAT"+auxTercRepeat_init,"_","_");
+                                    int aux2 = Terceto.crearTerceto("1","_","_");
                                     Terceto.insertarElementoEnTS("1","1","Int",0);
-                                    Terceto.crearTerceto("-","_INT_AUX_REPEAT"+auxTercRepeat_init,"["+Terceto.contador+"]");
-                                    Terceto.crearTerceto("=","_INT_AUX_REPEAT"+auxTercRepeat_init,"["+Terceto.contador+"]");
+                                    Terceto.crearTerceto("+","["+aux+"]","["+aux2+"]");
+                                    Terceto.crearTerceto("=","INT_AUX_REPEAT"+auxTercRepeat_init,"["+(Terceto.contador)+"]");
                                     Terceto.crearTerceto("BRA","["+auxTercRepeat_init+"]","_");
                                     Terceto.actualizarEtiqueta("_ETIQ_"+auxTercRepeat_fin,Terceto.contador+1);
                                     Terceto.crearTerceto("_ETIQ_"+auxTercRepeat_fin,"_","_");:};
