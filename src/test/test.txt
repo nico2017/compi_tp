@@ -46,3 +46,21 @@ c = 0
 c=11+b*(b-.21)/4.3
 write("RESUL CALC ARIT")
 write(c)
+
+write("TEST ASIG STRING")
+
+p1 = "Hola mundo"
+
+write(p1)
+
+write("TEST READ")
+
+write("Ingrese un numero:")
+read(c)
+write("Numero ingresado:")
+write(c)
+
+write("Ingrese un texto:")
+read(p2)
+write("Texto ingresado:")
+write(p2)

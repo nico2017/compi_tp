@@ -242,17 +242,20 @@ parser code{:
                             codigoASM+="fstp _"+datos[1]+"\n";
                         }else{
                             datos[2] = datos[2].replaceAll("[^\\dA-Za-z]","");
-                            codigoASM+="fld _"+datos[2]+"\n";
-                            codigoASM+="fstp _"+datos[1]+"\n";
+                            codigoASM+="lea di, _"+datos[1]+"\n";
+                            codigoASM+="mov si,offset _"+datos[2]+"\n";
+                            codigoASM+="mov cx, MAXTEXTSIZE\n";
+                            codigoASM+="rep movsb\n";
                         }
 
                     }
                     if(datos[0].equals("WRITE") ){
-                        datos[1] = datos[1].replaceAll("[^\\dA-Za-z]","");
-                        if(codigoASMTS.contains("_"+datos[1]+" dd")){
+
+                        if(codigoASMTS.contains("_"+datos[1].replace(".","_")+" dd")){
                             //quiere imprimir numero. cambio rutina
-                            codigoASM+="displayFloat _"+datos[1]+",2\n";
+                            codigoASM+="displayFloat _"+datos[1].replace(".","_")+",2\n";
                         }else{
+                            datos[1] = datos[1].replaceAll("[^\\dA-Za-z]","");
                             codigoASM+="mov dx,OFFSET _"+datos[1]+"\n";
                             codigoASM+="mov ah,9 \n";
                             codigoASM+="int 21h\n";
@@ -261,8 +264,14 @@ parser code{:
 
                     }
                     if(datos[0].equals("READ") ){
-                        datos[1] = datos[1].replaceAll("[^\\dA-Za-z]","");
-                        codigoASM+="getString _"+datos[1]+"\n";
+                        if(codigoASMTS.contains("_"+datos[1]+" dd")){
+                            //quiere CAPTURAR numero. cambio rutina
+                            codigoASM+="getFloat _"+datos[1]+",2\n";
+                        }else{
+                            datos[1] = datos[1].replaceAll("[^\\dA-Za-z]","");
+                            codigoASM+="getString _"+datos[1]+"\n";
+                        }
+
                     }
                 }
                 String header = "";
