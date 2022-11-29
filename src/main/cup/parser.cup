@@ -48,7 +48,7 @@ parser code{:
         public static   String tableCSV = "";
 
         public static void actualizarEtiqueta(String etiqueta,int indexTerceto){
-            System.out.println("Dentro de actualizar: "+etiqueta+" por "+indexTerceto+" - "+Terceto.terc+"\n ------");
+
             Terceto.terc = (Terceto.terc).replace(etiqueta, "["+indexTerceto+"]");
         }
         public static int crearTerceto(String i,String ii,String iii){
@@ -64,7 +64,6 @@ parser code{:
                     =condicion=comparacion=condicionWhile=comparador=comment=selCase=listCase=functionRepeatInline=listVar=
                     decc=variablesListadas = 0;
             contador = 0;
-            System.out.println(terc);
 
             SymbolTableGenerator s = new SymbolTableGenerator();
             s.setTableSymbol(terc);
@@ -150,7 +149,6 @@ parser code{:
                     lineas += linea[1]+"\n";
                 }
 
-                System.out.println(lineas);
                 entrada.close();
                 String[] arrTercetos = lineas.split("\n");
 
@@ -309,7 +307,6 @@ parser code{:
                 codigoASM= codigoASM.replace("BNE","JNE");
                 codigoASM= codigoASM.replace("BEQ","JE");
                 codigoASM= codigoASM.replace("BI","JMP");
-                System.out.println(codigoASM);
             } catch (FileNotFoundException e) {}
 
             AsmCodeGenerator s = new AsmCodeGenerator();
@@ -404,16 +401,16 @@ start with programa;
 
 programa ::= bloque{:Terceto.guardarTS();Terceto.guardarTercetos();Terceto.generarASM();  :};
 
-bloque ::= bloque sentence {: System.out.println("BLOQUE + SETENCIA ES BLOQUE"); :}
-           |sentence {: System.out.println("SEnTENCIA ES BLOQUE"); :};
-sentence ::= declaracion{: System.out.println("DECLARACIoN ES SENTENCIA"); :}
-               |iteracion{: System.out.println("ITERACION ES SENTENCIA"); :}
-               |seleccion{: System.out.println("SELECCION ES SENTENCIA"); :}
-               |escribiendo{: System.out.println("WRITE ES SENTENCIA"); :}
-               |leyendo {: System.out.println("READ ES SENTENCIA"); :}
-               |assignment {: System.out.println("ASIGNACIoN ES SENTENCIA"); :}
-               |comment {: System.out.println("COMENTARIOS ES SENTENCIA"); :}
-               |functionRepeatInline {: System.out.println("COMENTARIOS ES SENTENCIA"); :};
+bloque ::= bloque sentence {:  :}
+           |sentence {:  :};
+sentence ::= declaracion{:  :}
+               |iteracion{:  :}
+               |seleccion{: :}
+               |escribiendo{: :}
+               |leyendo {: :}
+               |assignment {:  :}
+               |comment {: :}
+               |functionRepeatInline {:  :};
 
 declaracion::=
     INIT KEYOPEN
@@ -427,14 +424,14 @@ decc::= DECFLOAT  {:
                         String v = listVariables.remove();
                         Terceto.insertarElementoEnTS(v,v,"Float",1);
                     }
- System.out.println("Real"); :};
+  :};
 decc::= DECSTR  {:
 
                     while(!listVariables.isEmpty()){
                         String v = listVariables.remove();
                         Terceto.insertarElementoEnTS(v,v,"String",1);
                     }
- System.out.println("Cadena"); :};
+  :};
 decc::= DECINT {:
                      while(!listVariables.isEmpty()){
                          String v = listVariables.remove();
@@ -442,10 +439,10 @@ decc::= DECINT {:
                      }
 
 
- System.out.println("Entero"); :};
+  :};
 
-variablesListadas::=  variablesListadas COMA IDENTIFIER:id {:listVariables.add(""+id); System.out.println("Variable"); cont++; :};
-variablesListadas::=  IDENTIFIER:id {:listVariables.add(""+id); System.out.println("Variable"); cont=1; :};
+variablesListadas::=  variablesListadas COMA IDENTIFIER:id {:listVariables.add(""+id);  cont++; :};
+variablesListadas::=  IDENTIFIER:id {:listVariables.add(""+id);  cont=1; :};
 
 
 functionRepeatInline::= REPEAT INTEGER_CONSTANT:constant
@@ -592,14 +589,14 @@ comparador::=
 	|CMP_DIST       {:operaIf = "BEQ";:};
 
 assignment::= IDENTIFIER:id ASSIG STRCONSTANT:constant{:Terceto.insertarElementoEnTS(""+constant,""+constant,"String",0);Terceto.crearTerceto("=",""+id,""+constant);:};
-assignment ::= IDENTIFIER:id ASSIG expression {: Terceto.assignment=Terceto.crearTerceto("=",""+id,"["+Terceto.expression+"]");  System.out.print(",1" );:};
-expression ::= expression PLUS term {:Terceto.expression=Terceto.crearTerceto("+","["+Terceto.expression+"]","["+Terceto.term+"]");System.out.print(",2" );:};
-expression ::= expression SUB term {:Terceto.expression=Terceto.crearTerceto("-","["+Terceto.expression+"]","["+Terceto.term+"]");System.out.print(",3" );:};
-expression ::= term {:Terceto.expression= Terceto.term; System.out.print(",4" );:};
-term ::= term MULT factor {:Terceto.term=Terceto.crearTerceto("*","["+Terceto.term+"]","["+Terceto.factor+"]");System.out.print(",5" ); :};
-term ::= term DIV factor {:Terceto.term=Terceto.crearTerceto("/","["+Terceto.term+"]","["+Terceto.factor+"]");System.out.print(",6" ); :};
-term ::= factor {:Terceto.term = Terceto.factor;System.out.print(",7" );  :};
-factor ::= IDENTIFIER:id  {: Terceto.factor=Terceto.crearTerceto(""+id,"_","_");System.out.print(",8"); :};
-factor ::= INTEGER_CONSTANT:constant {:Terceto.insertarElementoEnTS(""+constant,""+constant,"Int",0);Terceto.factor=Terceto.crearTerceto(""+constant,"_","_"); System.out.print(",9"); :};
-factor ::= FLOATCONSTANT:constant {:Terceto.insertarElementoEnTS(""+constant,""+constant,"Float",0); Terceto.factor=Terceto.crearTerceto(""+constant,"_","_"); System.out.print(",10" ); :};
-factor ::= {:pilaExp.add(Terceto.expression);pilaExp.add(Terceto.term);:}OPEN_BRACKET expression CLOSE_BRACKET {:Terceto.factor = Terceto.expression;Terceto.term =pilaExp.removeLast();Terceto.expression = pilaExp.removeLast(); System.out.print(",11"); :};
+assignment ::= IDENTIFIER:id ASSIG expression {: Terceto.assignment=Terceto.crearTerceto("=",""+id,"["+Terceto.expression+"]");  :};
+expression ::= expression PLUS term {:Terceto.expression=Terceto.crearTerceto("+","["+Terceto.expression+"]","["+Terceto.term+"]");:};
+expression ::= expression SUB term {:Terceto.expression=Terceto.crearTerceto("-","["+Terceto.expression+"]","["+Terceto.term+"]");:};
+expression ::= term {:Terceto.expression= Terceto.term; :};
+term ::= term MULT factor {:Terceto.term=Terceto.crearTerceto("*","["+Terceto.term+"]","["+Terceto.factor+"]"); :};
+term ::= term DIV factor {:Terceto.term=Terceto.crearTerceto("/","["+Terceto.term+"]","["+Terceto.factor+"]"); :};
+term ::= factor {:Terceto.term = Terceto.factor;  :};
+factor ::= IDENTIFIER:id  {: Terceto.factor=Terceto.crearTerceto(""+id,"_","_"); :};
+factor ::= INTEGER_CONSTANT:constant {:Terceto.insertarElementoEnTS(""+constant,""+constant,"Int",0);Terceto.factor=Terceto.crearTerceto(""+constant,"_","_");  :};
+factor ::= FLOATCONSTANT:constant {:Terceto.insertarElementoEnTS(""+constant,""+constant,"Float",0); Terceto.factor=Terceto.crearTerceto(""+constant,"_","_");  :};
+factor ::= {:pilaExp.add(Terceto.expression);pilaExp.add(Terceto.term);:}OPEN_BRACKET expression CLOSE_BRACKET {:Terceto.factor = Terceto.expression;Terceto.term =pilaExp.removeLast();Terceto.expression = pilaExp.removeLast();  :};
